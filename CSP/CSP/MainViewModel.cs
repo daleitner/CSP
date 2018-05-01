@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using System.Windows.Input;
 using Base;
+using FileIO.FileWorker;
+using Microsoft.Win32;
 
 namespace CSP
 {
@@ -14,6 +17,9 @@ namespace CSP
 		private RelayCommand _addConstraintCommand;
 		private RelayCommand _runCommand;
 		private RelayCommand _generateCommand;
+		private RelayCommand _saveFileCommand;
+		private RelayCommand _loadFileCommand;
+		private RelayCommand _saveResultCommand;
 		private ObservableCollection<ConstraintViewModel> _constraintItems;
 		private ObservableCollection<Variable> _assignments;
 		private ObservableCollection<Constraint> _notMatchedConstraints;
@@ -26,6 +32,12 @@ namespace CSP
 
 		#region ctors
 
+		public MainViewModel()
+		{
+			_constraintItems = new ObservableCollection<ConstraintViewModel>();
+			_assignments = new ObservableCollection<Variable>();
+			_notMatchedConstraints = new ObservableCollection<Constraint>();
+		}
 		#endregion
 
 		#region properties
@@ -66,6 +78,36 @@ namespace CSP
 			{
 				return _runCommand ?? (_runCommand = new RelayCommand(
 					       param => Run()
+				       ));
+			}
+		}
+
+		public ICommand SaveFileCommand
+		{
+			get
+			{
+				return _saveFileCommand ?? (_saveFileCommand = new RelayCommand(
+					       param => SaveFile()
+				       ));
+			}
+		}
+
+		public ICommand LoadFileCommand
+		{
+			get
+			{
+				return _loadFileCommand ?? (_loadFileCommand = new RelayCommand(
+					       param => LoadFile()
+				       ));
+			}
+		}
+
+		public ICommand SaveResultCommand
+		{
+			get
+			{
+				return _saveResultCommand ?? (_saveResultCommand = new RelayCommand(
+					       param => SaveResult()
 				       ));
 			}
 		}
@@ -180,6 +222,10 @@ namespace CSP
 					constraints.Add(new Constraint(item.SelectedVariable1, item.SelectedComparator, item.SelectedVariable2));
 				}
 
+				foreach (var variable in _allVariables)
+				{
+					variable.Value = null;
+				}
 				var result = CSPSolver.Solve(_allVariables, _allDomains, constraints);
 				Assignments = new ObservableCollection<Variable>(result.Assignments);
 				NotMatchedConstraints = new ObservableCollection<Constraint>(result.NotMatchedConstraints);
@@ -214,6 +260,106 @@ namespace CSP
 						SelectedComparator = CompareEnum.NotEquals
 					};
 					AddConstraintViewModel(constraint);
+				}
+			}
+		}
+
+		private void SaveFile()
+		{
+			var dialog = new SaveFileDialog {Filter = "Views (*.csv)|*.csv"};
+			if (dialog.ShowDialog() == true)
+			{
+				var constraints = new List<Constraint>();
+				foreach (var item in ConstraintItems)
+				{
+					constraints.Add(new Constraint(item.SelectedVariable1, item.SelectedComparator, item.SelectedVariable2));
+				}
+
+				var fileName = dialog.FileName;
+				var file = FileWorker.GetInstance(fileName, true);
+				var max = _allVariables.Count;
+				if (_allDomains.Count > max)
+					max = _allDomains.Count;
+				if (constraints.Count > max)
+					max = constraints.Count;
+
+				for (var i = 0; i < max; i++)
+				{
+					var builder = new StringBuilder();
+					if (_allVariables.Count > i)
+						builder.Append(_allVariables[i].Name);
+					builder.Append(";");
+					if (_allDomains.Count > i)
+						builder.Append(_allDomains[i].Name);
+					builder.Append(";");
+					if (constraints.Count > i)
+					{
+						builder.Append(constraints[i].X.Name);
+						builder.Append(";");
+						builder.Append(constraints[i].Comparator);
+						builder.Append(";");
+						builder.Append(constraints[i].Y.Name);
+						builder.Append(";");
+					}
+					file.WriteLine(builder.ToString());
+				}
+			}
+		}
+
+		private void LoadFile()
+		{
+			var dialog = new OpenFileDialog {Filter = "Views (*.csv)|*.csv"};
+			if (dialog.ShowDialog() == true)
+			{
+				var lines = FileWorker.ReadFile(dialog.FileName).Replace("\r\n", "\n").Split('\n');
+				var variables = "";
+				var domains = "";
+				var constraints = new List<Constraint>();
+				var strings = new List<string>();
+				foreach (var line in lines.Where(x => !string.IsNullOrEmpty(x)))
+				{
+					var items = line.Split(';');
+					if (!string.IsNullOrEmpty(items[0]))
+						variables += items[0] + ",";
+					if (!string.IsNullOrEmpty(items[1]))
+						domains += items[1] + ",";
+					if(items.Length > 3)
+						strings.Add(items[2] + ";" + items[3] + ";" + items[4]);
+				}
+
+				VariableString = variables.Substring(0, variables.Length - 1);
+				DomainString = domains.Substring(0, domains.Length - 1);
+				Apply();
+				ConstraintItems.RemoveAt(0);
+
+				foreach (var s in strings)
+				{
+					var items = s.Split(';');
+					var constraint = new ConstraintViewModel(_allVariables)
+					{
+						SelectedVariable1 = _allVariables.FirstOrDefault(x => x.Name == items[0]),
+						SelectedComparator = (CompareEnum)Enum.Parse(typeof(CompareEnum), items[1]),
+						SelectedVariable2 = _allVariables.FirstOrDefault(x => x.Name == items[2])
+					};
+					AddConstraintViewModel(constraint);
+				}
+			}
+		}
+
+		private void SaveResult()
+		{
+			var dialog = new SaveFileDialog { Filter = "Views (*.csv)|*.csv" };
+			if (dialog.ShowDialog() == true)
+			{
+				var fileName = dialog.FileName;
+				var file = FileWorker.GetInstance(fileName, true);
+				foreach (var assignment in Assignments)
+				{
+					var builder = new StringBuilder();
+					builder.Append(assignment.Name);
+					builder.Append(";");
+					builder.Append(assignment.Value.Name);
+					file.WriteLine(builder.ToString());
 				}
 			}
 		}

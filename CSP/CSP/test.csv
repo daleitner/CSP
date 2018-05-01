@@ -1,0 +1,10 @@
+WA;blue;WA;NotEquals;NT
+NT;green;WA;NotEquals;SA
+Q;red;NT;NotEquals;Q
+NSW;;NT;NotEquals;SA
+V;;Q;NotEquals;NSW
+SA;;Q;NotEquals;SA
+T;;NSW;NotEquals;V
+;;NSW;NotEquals;SA
+;;V;NotEquals;SA
+;;WA;Greater;SA

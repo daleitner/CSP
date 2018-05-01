@@ -16,5 +16,10 @@ namespace CSP
 
 		public string Name { get; set; }
 		public Domain Value { get; set; }
+
+		public override string ToString()
+		{
+			return Name;
+		}
 	}
 }

@@ -45,6 +45,8 @@
 			</ScrollViewer>
 			<Button x:Name="button1" Content="+" HorizontalAlignment="Left" Margin="2,0,0,0" VerticalAlignment="Bottom" Width="20" Command="{Binding Path=AddConstraintCommand}"/>
 			<Button x:Name="button3" Content="Run" HorizontalAlignment="Right" Margin="0,0,2,0" VerticalAlignment="Bottom" Width="100" Command="{Binding Path=RunCommand}"/>
+			<Button x:Name="button5" Content="Load File" HorizontalAlignment="Center" Margin="0,0,2,0" VerticalAlignment="Bottom" Width="80" Command="{Binding Path=LoadFileCommand}"/>
+			<Button x:Name="button7" Content="Save File" HorizontalAlignment="Center" Margin="0,0,172,0" VerticalAlignment="Bottom" Width="80" Command="{Binding Path=SaveFileCommand}"/>
 		</Grid>
 		<Grid Grid.Column="1">
 			<Rectangle Fill="Black" HorizontalAlignment="Left" Width="2"></Rectangle>
@@ -52,7 +54,8 @@
 			<Label x:Name="label4" Content="Solution:" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top"/>
 			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,100,10,230" ItemsSource="{Binding Path=Assignments}" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"></DataGrid>
 			<Label x:Name="label5" Content="Not matched Constraints:" HorizontalAlignment="Left" Margin="10,0,0,185" VerticalAlignment="Bottom"/>
-			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10,0,10,30" ItemsSource="{Binding Path=NotMatchedConstraints}" Height="150" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"></DataGrid>
+			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10,0,10,50" ItemsSource="{Binding Path=NotMatchedConstraints}" Height="130" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"></DataGrid>
+			<Button x:Name="button6" Content="Save Result" HorizontalAlignment="Right" Margin="0,0,10,20" VerticalAlignment="Bottom" Width="100" Command="{Binding Path=SaveResultCommand}"/>
 			<Label x:Name="label6" Content="{Binding Path=Info}" HorizontalAlignment="Stretch" Margin="2,0,2,2" VerticalAlignment="Bottom"/>
 		</Grid>
 	</Grid>
