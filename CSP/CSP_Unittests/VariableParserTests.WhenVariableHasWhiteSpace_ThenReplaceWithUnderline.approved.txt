@@ -1,0 +1,2 @@
+﻿Variable[0] = a
+Variable[1] = b_c
