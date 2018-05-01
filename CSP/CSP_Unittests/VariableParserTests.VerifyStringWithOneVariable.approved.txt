@@ -1,1 +1,7 @@
-﻿Variable[0] = a
+﻿Δ Variables <1>
+	└➝ Variable
+	┌────────┐
+	│ [Name] │
+	├────────┤
+	│ a      │
+	└────────┘

@@ -47,6 +47,10 @@
       <HintPath>..\packages\ApprovalUtilities.3.0.14\lib\net45\ApprovalUtilities.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Base, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\References\Base.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Transactions" />
   </ItemGroup>
@@ -63,6 +67,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="DomainParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VariableParserTests.cs" />
   </ItemGroup>

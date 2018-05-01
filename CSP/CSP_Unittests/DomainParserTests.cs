@@ -2,20 +2,20 @@
 using ApprovalTests;
 using ApprovalTests.Reporters;
 using Base;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CSP;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace CSP_Unittests
 {
 	[TestClass]
 	[UseReporter(typeof(WinMergeReporter))]
-	public class VariableParserTests
+	public class DomainParserTests
 	{
 		[TestMethod]
 		public void VerifyStringWithOneVariable()
 		{
 			var input = "a";
-			var output = VariableParser.Parse(input);
+			var output = DomainParser.Parse(input);
 			Approvals.Verify(output.ToPrettyString());
 		}
 
@@ -23,7 +23,7 @@ namespace CSP_Unittests
 		public void VerifyStringWithTwoVariables()
 		{
 			var input = "a,b";
-			var output = VariableParser.Parse(input);
+			var output = DomainParser.Parse(input);
 			Approvals.Verify(output.ToPrettyString());
 		}
 
@@ -31,7 +31,7 @@ namespace CSP_Unittests
 		public void VerifyStringWithUntrimmedVariables()
 		{
 			var input = " a,b ";
-			var output = VariableParser.Parse(input);
+			var output = DomainParser.Parse(input);
 			Approvals.Verify(output.ToPrettyString());
 		}
 
@@ -39,7 +39,7 @@ namespace CSP_Unittests
 		public void WhenVariableHasWhiteSpace_ThenReplaceWithUnderline()
 		{
 			var input = " a,b c";
-			var output = VariableParser.Parse(input);
+			var output = DomainParser.Parse(input);
 			Approvals.Verify(output.ToPrettyString());
 		}
 
@@ -50,13 +50,13 @@ namespace CSP_Unittests
 			var exc = "";
 			try
 			{
-				VariableParser.Parse(input);
+				DomainParser.Parse(input);
 			}
 			catch (ArgumentException ex)
 			{
 				exc = ex.Message;
 			}
-			Approvals.Verify("Exception message: " +exc);
+			Approvals.Verify("Exception message: " + exc);
 		}
 
 		[TestMethod]
@@ -66,7 +66,7 @@ namespace CSP_Unittests
 			var exc = "";
 			try
 			{
-				VariableParser.Parse(input);
+				DomainParser.Parse(input);
 			}
 			catch (ArgumentException ex)
 			{
@@ -82,13 +82,31 @@ namespace CSP_Unittests
 			var exc = "";
 			try
 			{
-				VariableParser.Parse(input);
+				DomainParser.Parse(input);
 			}
 			catch (ArgumentException ex)
 			{
 				exc = ex.Message;
 			}
 			Approvals.Verify("Exception message: " + exc);
+		}
+
+		[TestMethod]
+		public void VerifyNumberInterval()
+		{
+			var input = "[1-9]";
+
+			var output = DomainParser.Parse(input);
+
+			Approvals.Verify(output.ToPrettyString());
+		}
+
+		[TestMethod]
+		public void VerifyLetterInterval()
+		{
+			var input = "[A-F]";
+			var output = DomainParser.Parse(input);
+			Approvals.Verify(output.ToPrettyString());
 		}
 	}
 }

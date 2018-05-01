@@ -1,2 +1,13 @@
-﻿Variable[0] = a
-Variable[1] = b_c
+﻿Δ Variables <2>
+	└➝ Variable
+	┌────────┐
+	│ [Name] │
+	├────────┤
+	│ a      │
+	└────────┘
+	└➝ Variable
+	┌────────┐
+	│ [Name] │
+	├────────┤
+	│ b_c    │
+	└────────┘

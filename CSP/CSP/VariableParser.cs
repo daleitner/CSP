@@ -8,23 +8,27 @@ namespace CSP
 {
 	public static class VariableParser
 	{
-		public static List<string> Parse(string input)
+		public static List<Variable> Parse(string input)
 		{
-			var variables = input.Split(',').ToList();
-			for (var i = 0; i < variables.Count; i++)
+			var variableNames = input.Split(',').ToList();
+			for (var i = 0; i < variableNames.Count; i++)
 			{
-				variables[i] = variables[i].Trim();
-				variables[i] = variables[i].Replace(' ', '_');
+				variableNames[i] = variableNames[i].Trim();
+				variableNames[i] = variableNames[i].Replace(' ', '_');
 			}
 
-			foreach (var variable in variables)
+			foreach (var variable in variableNames)
 			{
 				if(string.IsNullOrEmpty(variable))
 					throw new ArgumentException("Variable name must not be empty!");
-				var cnt = variables.Count(x => x == variable);
+				var cnt = variableNames.Count(x => x == variable);
 				if(cnt > 1)
 					throw new ArgumentException("Variables are not unique!");
 			}
+
+			var variables = new List<Variable>();
+			variableNames.ForEach(x => variables.Add(new Variable(x, null)));
+
 			return variables;
 		}
 	}

@@ -39,6 +39,7 @@
       <HintPath>..\References\Base.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -58,6 +59,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CompareEnum.cs" />
+    <Compile Include="Constraint.cs" />
+    <Compile Include="ConstraintViewModel.cs" />
+    <Compile Include="Domain.cs" />
+    <Compile Include="DomainParser.cs" />
+    <Compile Include="Variable.cs" />
     <Compile Include="VariableParser.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
