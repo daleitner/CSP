@@ -199,10 +199,13 @@ namespace CSP
 
 		private static bool IsBetter(Dictionary<Variable, int> cnt, Dictionary<Variable, int> constrainingValues)
 		{
+			var atLeastOneBetter = false;
 			foreach (var variable in cnt.Keys)
 			{
 				if (cnt[variable] < constrainingValues[variable])
 					return false;
+				if (cnt[variable] > constrainingValues[variable])
+					atLeastOneBetter = true;
 			}
 
 			return true;
