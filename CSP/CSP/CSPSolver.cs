@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace CSP
 {
 	public static class CSPSolver
 	{
-		public static CSPContainer Solve(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct)
+		public static CSPContainer Solve(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
 		{
-			SolveCSP(variables, domains, constraints, isPairwiseDisjunct);
+			SolveCSP(variables, domains, constraints, isPairwiseDisjunct, worker);
 			var notMatched = new List<Constraint>();
 			foreach (var constraint in constraints)
 			{
@@ -18,7 +19,7 @@ namespace CSP
 			return new CSPContainer {Assignments = variables, NotMatchedConstraints = notMatched};
 		}
 
-		private static bool SolveCSP(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct)
+		private static bool SolveCSP(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
 		{
 			var unassigned = variables.Where(x => x.Value == null).ToList();
 			if (unassigned.Count == 0)
@@ -31,9 +32,10 @@ namespace CSP
 				next.Variable.Value = domain;
 				if (isPairwiseDisjunct)
 					domains.Remove(domain);
+				worker.ReportProgress(variables.Count(x => x.Value != null)*100/variables.Count);
 				if (IsConsistent(constraints))
 				{
-					var isSuccess = SolveCSP(variables, domains, constraints, isPairwiseDisjunct);
+					var isSuccess = SolveCSP(variables, domains, constraints, isPairwiseDisjunct, worker);
 					if (isSuccess)
 						return true;
 				}

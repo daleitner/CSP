@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Windows;
 using System.Windows.Input;
 using Base;
 using FileIO.FileWorker;
@@ -29,6 +31,10 @@ namespace CSP
 		private string _domainString = "";
 		private string _info = "";
 		private bool _isPairwiseDisjunct;
+		private readonly BackgroundWorker _worker;
+		private int _calculationProgress;
+		private Visibility _loadVisibility = Visibility.Collapsed;
+		private CSPContainer _result;
 		#endregion
 
 		#region ctors
@@ -38,6 +44,14 @@ namespace CSP
 			_constraintItems = new ObservableCollection<ConstraintViewModel>();
 			_assignments = new ObservableCollection<Variable>();
 			_notMatchedConstraints = new ObservableCollection<Constraint>();
+			_worker = new BackgroundWorker()
+			{
+				WorkerReportsProgress = true,
+				WorkerSupportsCancellation = true
+			};
+			_worker.DoWork += _worker_DoWork;
+			_worker.ProgressChanged += _worker_ProgressChanged;
+			_worker.RunWorkerCompleted += _worker_RunWorkerCompleted;
 		}
 		#endregion
 
@@ -189,6 +203,29 @@ namespace CSP
 				OnPropertyChanged(nameof(IsPairwiseDisjunct));
 			}
 		}
+
+		public int CalculationProgress
+		{
+			get { return _calculationProgress; }
+			set
+			{
+				_calculationProgress = value;
+				OnPropertyChanged(nameof(CalculationProgress));
+			}
+		}
+
+		public Visibility LoadVisibility
+		{
+			get
+			{
+				return _loadVisibility;
+			}
+			set
+			{
+				_loadVisibility = value;
+				OnPropertyChanged(nameof(LoadVisibility));
+			}
+		}
 		#endregion
 
 		#region private methods
@@ -226,9 +263,12 @@ namespace CSP
 				{
 					variable.Value = null;
 				}
-				var result = CSPSolver.Solve(_allVariables, new List<Domain>(_allDomains), constraints, IsPairwiseDisjunct);
-				Assignments = new ObservableCollection<Variable>(result.Assignments);
-				NotMatchedConstraints = new ObservableCollection<Constraint>(result.NotMatchedConstraints);
+
+				LoadVisibility = Visibility.Visible;
+				if (!_worker.IsBusy)
+				{
+					_worker.RunWorkerAsync(constraints);
+				}
 			}
 			catch (Exception e)
 			{
@@ -355,6 +395,26 @@ namespace CSP
 					file.WriteLine(builder.ToString());
 				}
 			}
+		}
+
+		private void _worker_DoWork(object sender, DoWorkEventArgs e)
+		{
+			var worker = (BackgroundWorker)sender;
+			var constraints = (List<Constraint>) e.Argument;
+			_result = CSPSolver.Solve(_allVariables, new List<Domain>(_allDomains), constraints, IsPairwiseDisjunct, worker);
+		}
+
+		private void _worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+		{
+			CalculationProgress = e.ProgressPercentage;
+		}
+
+		private void _worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+		{
+			Assignments = new ObservableCollection<Variable>(_result.Assignments);
+			NotMatchedConstraints = new ObservableCollection<Constraint>(_result.NotMatchedConstraints);
+			LoadVisibility = Visibility.Collapsed;
+			CalculationProgress = 0;
 		}
 		#endregion
 

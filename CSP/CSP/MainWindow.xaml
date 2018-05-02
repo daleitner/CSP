@@ -56,6 +56,8 @@
 			<Label x:Name="label5" Content="Not matched Constraints:" HorizontalAlignment="Left" Margin="10,0,0,185" VerticalAlignment="Bottom"/>
 			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10,0,10,50" ItemsSource="{Binding Path=NotMatchedConstraints}" Height="130" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False"></DataGrid>
 			<Button x:Name="button6" Content="Save Result" HorizontalAlignment="Right" Margin="0,0,10,20" VerticalAlignment="Bottom" Width="100" Command="{Binding Path=SaveResultCommand}"/>
+			<ProgressBar x:Name="pb1" HorizontalAlignment="Left" Margin="20,0,10,20" VerticalAlignment="Bottom" Width="100" Height="20" Visibility="{Binding Path=LoadVisibility}" Maximum="100" Minimum="0" Value="{Binding Path=CalculationProgress, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"></ProgressBar>
+			<Label x:Name="label7" Content="{Binding Path=CalculationProgress, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="125,0,2,18" Width="50" VerticalAlignment="Bottom" Visibility="{Binding Path=LoadVisibility}" />
 			<Label x:Name="label6" Content="{Binding Path=Info}" HorizontalAlignment="Stretch" Margin="2,0,2,2" VerticalAlignment="Bottom"/>
 		</Grid>
 	</Grid>
