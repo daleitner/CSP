@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Input;
@@ -16,7 +17,6 @@ namespace CSP
 		private RelayCommand _applyCommand;
 		private RelayCommand _addConstraintCommand;
 		private RelayCommand _runCommand;
-		private RelayCommand _generateCommand;
 		private RelayCommand _saveFileCommand;
 		private RelayCommand _loadFileCommand;
 		private RelayCommand _saveResultCommand;
@@ -28,6 +28,7 @@ namespace CSP
 		private string _variableString = "";
 		private string _domainString = "";
 		private string _info = "";
+		private bool _isPairwiseDisjunct;
 		#endregion
 
 		#region ctors
@@ -47,17 +48,6 @@ namespace CSP
 			{
 				return _applyCommand ?? (_applyCommand = new RelayCommand(
 					       param => Apply()
-				       ));
-			}
-		}
-
-		public ICommand GenerateCommand
-		{
-			get
-			{
-				return _generateCommand ?? (_generateCommand = new RelayCommand(
-					       param => GenerateConstraints(),
-						   param => _allVariables != null
 				       ));
 			}
 		}
@@ -189,6 +179,16 @@ namespace CSP
 				OnPropertyChanged("Info");
 			}
 		}
+
+		public bool IsPairwiseDisjunct
+		{
+			get { return _isPairwiseDisjunct; }
+			set
+			{
+				_isPairwiseDisjunct = value;
+				OnPropertyChanged(nameof(IsPairwiseDisjunct));
+			}
+		}
 		#endregion
 
 		#region private methods
@@ -226,7 +226,7 @@ namespace CSP
 				{
 					variable.Value = null;
 				}
-				var result = CSPSolver.Solve(_allVariables, _allDomains, constraints);
+				var result = CSPSolver.Solve(_allVariables, new List<Domain>(_allDomains), constraints, IsPairwiseDisjunct);
 				Assignments = new ObservableCollection<Variable>(result.Assignments);
 				NotMatchedConstraints = new ObservableCollection<Constraint>(result.NotMatchedConstraints);
 			}
@@ -247,23 +247,6 @@ namespace CSP
 			ConstraintItems.Remove(constraint);
 		}
 
-		private void GenerateConstraints()
-		{
-			for (int i = 0; i < _allVariables.Count; i++)
-			{
-				for (int j = i+1; j < _allVariables.Count; j++)
-				{
-					var constraint = new ConstraintViewModel(_allVariables)
-					{
-						SelectedVariable1 = _allVariables[i],
-						SelectedVariable2 = _allVariables[j],
-						SelectedComparator = CompareEnum.NotEquals
-					};
-					AddConstraintViewModel(constraint);
-				}
-			}
-		}
-
 		private void SaveFile()
 		{
 			var dialog = new SaveFileDialog {Filter = "Views (*.csv)|*.csv"};
@@ -276,6 +259,8 @@ namespace CSP
 				}
 
 				var fileName = dialog.FileName;
+				if(File.Exists(fileName))
+					FileWorker.DeleteFile(fileName);
 				var file = FileWorker.GetInstance(fileName, true);
 				var max = _allVariables.Count;
 				if (_allDomains.Count > max)
@@ -301,6 +286,13 @@ namespace CSP
 						builder.Append(constraints[i].Y.Name);
 						builder.Append(";");
 					}
+					else
+					{
+						builder.Append(";;;");
+					}
+
+					if (i == 0)
+						builder.Append(IsPairwiseDisjunct);
 					file.WriteLine(builder.ToString());
 				}
 			}
@@ -332,7 +324,8 @@ namespace CSP
 				Apply();
 				ConstraintItems.RemoveAt(0);
 
-				foreach (var s in strings)
+				IsPairwiseDisjunct = bool.Parse(lines.First().Split(';')[5]);
+				foreach (var s in strings.Where(x => x != ";;"))
 				{
 					var items = s.Split(';');
 					var constraint = new ConstraintViewModel(_allVariables)

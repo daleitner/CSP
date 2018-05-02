@@ -28,7 +28,7 @@
 			<TextBox x:Name="textBox1" HorizontalAlignment="Stretch" Height="23" Margin="2,75,2,2" Text="{Binding Path=DomainString}" VerticalAlignment="Top"/>
 			<Button x:Name="button" Content="Apply" HorizontalAlignment="Center" Margin="0,110,0,0" VerticalAlignment="Top" Width="100" Command="{Binding Path=ApplyCommand}"/>
 			<Label x:Name="label2" Content="Constraints:" HorizontalAlignment="Left"  Margin="2,135,2,2" VerticalAlignment="Top"/>
-			<Button x:Name="button4" Content="Generate" ToolTip="Generate paarwise disjunct Constraints" HorizontalAlignment="Right" Margin="0,142,5,0" FontSize="10" VerticalAlignment="Top" Width="50" Height="15" Command="{Binding Path=GenerateCommand}"/>
+			<CheckBox x:Name="cb1" Content="pairwise disjunct" ToolTip="Check when variables should be paarwise disjunct" HorizontalAlignment="Right" Margin="0,142,5,0" FontSize="10" VerticalAlignment="Top" Width="100" Height="15" IsChecked="{Binding Path=IsPairwiseDisjunct}"/>
 			<ScrollViewer Margin="0,160,0,30">
 				<ItemsControl ItemsSource="{Binding Path=ConstraintItems}">
 					<ItemsControl.ItemTemplate>
@@ -52,9 +52,9 @@
 			<Rectangle Fill="Black" HorizontalAlignment="Left" Width="2"></Rectangle>
 			<Label x:Name="label3" Content="CSP" HorizontalAlignment="Center" FontSize="30" FontWeight="Bold" Margin="0,10,0,0" VerticalAlignment="Top"/>
 			<Label x:Name="label4" Content="Solution:" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top"/>
-			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,100,10,230" ItemsSource="{Binding Path=Assignments}" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"></DataGrid>
+			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,100,10,230" ItemsSource="{Binding Path=Assignments}" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False"></DataGrid>
 			<Label x:Name="label5" Content="Not matched Constraints:" HorizontalAlignment="Left" Margin="10,0,0,185" VerticalAlignment="Bottom"/>
-			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10,0,10,50" ItemsSource="{Binding Path=NotMatchedConstraints}" Height="130" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True"></DataGrid>
+			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10,0,10,50" ItemsSource="{Binding Path=NotMatchedConstraints}" Height="130" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False"></DataGrid>
 			<Button x:Name="button6" Content="Save Result" HorizontalAlignment="Right" Margin="0,0,10,20" VerticalAlignment="Bottom" Width="100" Command="{Binding Path=SaveResultCommand}"/>
 			<Label x:Name="label6" Content="{Binding Path=Info}" HorizontalAlignment="Stretch" Margin="2,0,2,2" VerticalAlignment="Bottom"/>
 		</Grid>

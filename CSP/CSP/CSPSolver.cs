@@ -6,9 +6,9 @@ namespace CSP
 {
 	public static class CSPSolver
 	{
-		public static CSPContainer Solve(List<Variable> variables, List<Domain> domains, List<Constraint> constraints)
+		public static CSPContainer Solve(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct)
 		{
-			SolveCSP(variables, domains, constraints);
+			SolveCSP(variables, domains, constraints, isPairwiseDisjunct);
 			var notMatched = new List<Constraint>();
 			foreach (var constraint in constraints)
 			{
@@ -18,24 +18,28 @@ namespace CSP
 			return new CSPContainer {Assignments = variables, NotMatchedConstraints = notMatched};
 		}
 
-		private static bool SolveCSP(List<Variable> variables, List<Domain> domains, List<Constraint> constraints)
+		private static bool SolveCSP(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct)
 		{
 			var unassigned = variables.Where(x => x.Value == null).ToList();
 			if (unassigned.Count == 0)
 				return true;
 
 			var next = MinimumRemainingValues(unassigned, domains, constraints);
-			var domainOrder = LeastConstrainingValueOrder(next, domains, constraints);
+			var domainOrder = LeastConstrainingValueOrder(next, domains, constraints, isPairwiseDisjunct);
 			foreach (var domain in domainOrder)
 			{
 				next.Variable.Value = domain;
+				if (isPairwiseDisjunct)
+					domains.Remove(domain);
 				if (IsConsistent(constraints))
 				{
-					var isSuccess = SolveCSP(variables, domains, constraints);
+					var isSuccess = SolveCSP(variables, domains, constraints, isPairwiseDisjunct);
 					if (isSuccess)
 						return true;
 				}
 				next.Variable.Value = null;
+				if(isPairwiseDisjunct)
+					domains.Add(domain);
 			}
 			return false;
 		}
@@ -158,7 +162,7 @@ namespace CSP
 			return result;
 		}
 
-		private static List<Domain> LeastConstrainingValueOrder(MrvResult next, List<Domain> domains, List<Constraint> constraints)
+		private static List<Domain> LeastConstrainingValueOrder(MrvResult next, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct)
 		{
 			Variable act = next.Variable;
 			var neighbours = GetNeighbours(act, constraints).Where(x => x.Value == null).ToList();
@@ -168,7 +172,7 @@ namespace CSP
 			var tmp = new List<Domain>(next.LegalValues);
 			while (tmp.Count > 0)
 			{
-				Domain best = null;
+				Domain best = tmp.FirstOrDefault();
 				Dictionary<Variable, int> constrainingValues = new Dictionary<Variable, int>();
 				foreach (var neighbour in neighbours)
 				{
@@ -178,12 +182,16 @@ namespace CSP
 				foreach (var domain in tmp)
 				{
 					act.Value = domain;
+					if (isPairwiseDisjunct)
+						domains.Remove(domain);
 					var cnt = CountConstrainingValues(neighbours, domains, constraints);
 					if (IsBetter(cnt, constrainingValues))
 					{
 						constrainingValues = cnt;
 						best = domain;
 					}
+					if(isPairwiseDisjunct)
+						domains.Add(domain);
 				}
 
 				if (!constrainingValues.ContainsValue(0))
@@ -208,7 +216,7 @@ namespace CSP
 					atLeastOneBetter = true;
 			}
 
-			return true;
+			return atLeastOneBetter;
 		}
 
 		private static Dictionary<Variable, int> CountConstrainingValues(List<Variable> neighbours, List<Domain> domains, List<Constraint> constraints)
