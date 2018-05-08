@@ -254,9 +254,11 @@ namespace CSP
 			try
 			{
 				var constraints = new List<Constraint>();
+				int i = 0;
 				foreach (var item in ConstraintItems)
 				{
-					constraints.Add(new Constraint(item.SelectedVariable1, item.SelectedComparator, item.SelectedVariable2));
+					constraints.Add(new Constraint(i, item.SelectedVariable1, item.SelectedComparator, item.SelectedVariable2));
+					i++;
 				}
 
 				foreach (var variable in _allVariables)
@@ -293,9 +295,11 @@ namespace CSP
 			if (dialog.ShowDialog() == true)
 			{
 				var constraints = new List<Constraint>();
+				int i = 0;
 				foreach (var item in ConstraintItems)
 				{
-					constraints.Add(new Constraint(item.SelectedVariable1, item.SelectedComparator, item.SelectedVariable2));
+					constraints.Add(new Constraint(i, item.SelectedVariable1, item.SelectedComparator, item.SelectedVariable2));
+					i++;
 				}
 
 				var fileName = dialog.FileName;
@@ -308,7 +312,7 @@ namespace CSP
 				if (constraints.Count > max)
 					max = constraints.Count;
 
-				for (var i = 0; i < max; i++)
+				for (i = 0; i < max; i++)
 				{
 					var builder = new StringBuilder();
 					if (_allVariables.Count > i)
@@ -346,7 +350,6 @@ namespace CSP
 				var lines = FileWorker.ReadFile(dialog.FileName).Replace("\r\n", "\n").Split('\n');
 				var variables = "";
 				var domains = "";
-				var constraints = new List<Constraint>();
 				var strings = new List<string>();
 				foreach (var line in lines.Where(x => !string.IsNullOrEmpty(x)))
 				{
