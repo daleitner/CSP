@@ -9,6 +9,7 @@ namespace CSP
 	{
 		public static CSPContainer Solve(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
 		{
+			SetVariablesWithNoConstraints(variables, domains, constraints, isPairwiseDisjunct, worker);
 			SolveCSP(variables, domains, constraints, isPairwiseDisjunct, worker);
 			var notMatched = new List<Constraint>();
 			foreach (var constraint in constraints)
@@ -17,6 +18,27 @@ namespace CSP
 					notMatched.Add(constraint);
 			}
 			return new CSPContainer {Assignments = variables, NotMatchedConstraints = notMatched};
+		}
+
+		private static void SetVariablesWithNoConstraints(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
+		{
+			foreach (var variable in variables)
+			{
+				if (constraints.Count(constraint => constraint.X == variable || constraint.Y == variable) > 0)
+					continue;
+
+				var maxDomain = domains.First();
+				foreach (var domain in domains)
+				{
+					if (domain.Value > maxDomain.Value)
+						maxDomain = domain;
+				}
+
+				variable.Value = maxDomain;
+				if (isPairwiseDisjunct)
+					domains.Remove(maxDomain);
+				worker.ReportProgress(variables.Count(x => x.Value != null) * 100 / variables.Count);
+			}
 		}
 
 		private static bool SolveCSP(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
