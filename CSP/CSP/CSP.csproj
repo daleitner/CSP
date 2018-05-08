@@ -62,7 +62,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Calculation\ConstraintValidator.cs" />
+    <Compile Include="Calculation\ConstraintManager.cs" />
     <Compile Include="Calculation\CSPValidator.cs" />
     <Compile Include="Data\CompareEnum.cs" />
     <Compile Include="Data\Constraint.cs" />

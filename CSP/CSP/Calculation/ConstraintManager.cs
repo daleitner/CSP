@@ -7,7 +7,7 @@ using CSP.Data;
 
 namespace CSP.Calculation
 {
-	public class ConstraintValidator
+	public class ConstraintManager
 	{
 		
 	}

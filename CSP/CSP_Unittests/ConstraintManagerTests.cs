@@ -13,7 +13,7 @@ namespace CSP_Unittests
 {
 	[TestClass]
 	[UseReporter(typeof(WinMergeReporter))]
-	public class ConstraintValidatorTests
+	public class ConstraintManagerTests
 	{
 
 	}
