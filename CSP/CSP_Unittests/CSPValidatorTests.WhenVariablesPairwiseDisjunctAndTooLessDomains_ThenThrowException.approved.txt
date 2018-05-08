@@ -1,0 +1,1 @@
+﻿CSP is invalid, because there are more Variables than Domains. Add some additional Domains or remove the pairwise disjunctive flag

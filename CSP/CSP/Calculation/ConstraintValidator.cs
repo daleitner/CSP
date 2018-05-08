@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CSP.Data;
 
-namespace CSP
+namespace CSP.Calculation
 {
-	public class MrvResult
+	public class ConstraintValidator
 	{
-		public Variable Variable { get; set; }
-		public List<Domain> LegalValues { get; set; }
+		
 	}
 }

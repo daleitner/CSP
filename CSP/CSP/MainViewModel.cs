@@ -8,6 +8,8 @@ using System.Text;
 using System.Windows;
 using System.Windows.Input;
 using Base;
+using CSP.Calculation;
+using CSP.Data;
 using FileIO.FileWorker;
 using Microsoft.Win32;
 
@@ -233,6 +235,7 @@ namespace CSP
 		{
 			try
 			{
+				Info = "";
 				_allVariables = VariableParser.Parse(VariableString);
 				_allDomains = DomainParser.Parse(DomainString);
 				ConstraintItems = new ObservableCollection<ConstraintViewModel>();
@@ -253,6 +256,7 @@ namespace CSP
 		{
 			try
 			{
+				Info = "";
 				var constraints = new List<Constraint>();
 				int i = 0;
 				foreach (var item in ConstraintItems)
@@ -266,6 +270,8 @@ namespace CSP
 					variable.Value = null;
 				}
 
+				if (!CSPValidator.Validate(_allVariables, _allDomains, constraints, IsPairwiseDisjunct))
+					return;
 				LoadVisibility = Visibility.Visible;
 				if (!_worker.IsBusy)
 				{

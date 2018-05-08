@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using CSP.Data;
 
-namespace CSP
+namespace CSP.Calculation
 {
 	public static class CSPSolver
 	{

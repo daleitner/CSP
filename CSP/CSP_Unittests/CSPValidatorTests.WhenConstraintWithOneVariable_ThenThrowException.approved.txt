@@ -1,0 +1,1 @@
+﻿Error Constraint [1]: Constraint to same variable is not allowed!

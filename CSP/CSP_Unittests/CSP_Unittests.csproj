@@ -67,6 +67,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ConstraintValidatorTests.cs" />
+    <Compile Include="CSPValidatorTests.cs" />
     <Compile Include="DomainParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VariableParserTests.cs" />
