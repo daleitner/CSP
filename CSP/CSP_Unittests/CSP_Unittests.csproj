@@ -68,6 +68,7 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ConstraintManagerTests.cs" />
+    <Compile Include="ConstraintTests.cs" />
     <Compile Include="CSPValidatorTests.cs" />
     <Compile Include="DomainParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

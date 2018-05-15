@@ -10,9 +10,19 @@ namespace CSP.Calculation
 	{
 		public static CSPContainer Solve(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
 		{
+			var redundandConstraints = ConstraintManager.GetRedundandConstraints(constraints, isPairwiseDisjunct);
+			foreach (var redundandConstraint in redundandConstraints)
+			{
+				constraints.Remove(redundandConstraint);
+			}
+			var notMatched = ConstraintManager.GetNotMatchedConstraints(constraints, isPairwiseDisjunct);
+			foreach (var constraint in notMatched)
+			{
+				constraints.Remove(constraint);
+			}
 			SetVariablesWithNoConstraints(variables, domains, constraints, isPairwiseDisjunct, worker);
 			SolveCSP(variables, domains, constraints, isPairwiseDisjunct, worker);
-			var notMatched = new List<Constraint>();
+			
 			foreach (var constraint in constraints)
 			{
 				if(!IsSatisfied(constraint))
