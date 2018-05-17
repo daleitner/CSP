@@ -79,6 +79,125 @@ namespace CSP_Unittests
 			};
 			Approvals.Verify(ConstraintManager.GetRedundandConstraints(constraints, true).ToPrettyString());
 		}
+
+		[TestMethod]
+		public void WhenA_is_B_and_B_is_C_and_A_is_C_ThenA_is_C_isRedundand()
+		{
+			var variables = new List<Variable>()
+			{
+				new Variable("A", null),
+				new Variable("B", null),
+				new Variable("C", null)
+			};
+			var domains = new List<Domain>
+			{
+				new Domain("red", 1),
+				new Domain("blue", 2)
+			};
+			var constraints = new List<Constraint>
+			{
+				new Constraint(1, variables[0], CompareEnum.Equals, variables[1]),
+				new Constraint(2, variables[1], CompareEnum.Equals, variables[2]),
+				new Constraint(2, variables[0], CompareEnum.Equals, variables[2])
+			};
+			Approvals.Verify(ConstraintManager.GetRedundandConstraints(constraints, false).ToPrettyString());
+		}
+
+		[TestMethod]
+		public void WhenA_is_B_and_B_is_C_and_C_is_A_ThenC_is_A_isRedundand()
+		{
+			var variables = new List<Variable>()
+			{
+				new Variable("A", null),
+				new Variable("B", null),
+				new Variable("C", null)
+			};
+			var domains = new List<Domain>
+			{
+				new Domain("red", 1),
+				new Domain("blue", 2)
+			};
+			var constraints = new List<Constraint>
+			{
+				new Constraint(1, variables[0], CompareEnum.Equals, variables[1]),
+				new Constraint(2, variables[1], CompareEnum.Equals, variables[2]),
+				new Constraint(2, variables[2], CompareEnum.Equals, variables[0])
+			};
+			Approvals.Verify(ConstraintManager.GetRedundandConstraints(constraints, false).ToPrettyString());
+		}
+
+		[TestMethod]
+		public void WhenB_is_A_and_C_is_B_and_C_is_A_ThenC_is_A_isRedundand()
+		{
+			var variables = new List<Variable>()
+			{
+				new Variable("A", null),
+				new Variable("B", null),
+				new Variable("C", null)
+			};
+			var domains = new List<Domain>
+			{
+				new Domain("red", 1),
+				new Domain("blue", 2)
+			};
+			var constraints = new List<Constraint>
+			{
+				new Constraint(1, variables[1], CompareEnum.Equals, variables[0]),
+				new Constraint(2, variables[2], CompareEnum.Equals, variables[1]),
+				new Constraint(2, variables[2], CompareEnum.Equals, variables[0])
+			};
+			Approvals.Verify(ConstraintManager.GetRedundandConstraints(constraints, false).ToPrettyString());
+		}
+
+		[TestMethod]
+		public void WhenChainA_to_D_and_A_is_D_ThenA_is_D_isRedundand()
+		{
+			var variables = new List<Variable>()
+			{
+				new Variable("A", null),
+				new Variable("B", null),
+				new Variable("C", null),
+				new Variable("D", null)
+			};
+			var domains = new List<Domain>
+			{
+				new Domain("red", 1),
+				new Domain("blue", 2)
+			};
+			var constraints = new List<Constraint>
+			{
+				new Constraint(1, variables[0], CompareEnum.Equals, variables[1]),
+				new Constraint(2, variables[1], CompareEnum.Equals, variables[2]),
+				new Constraint(3, variables[2], CompareEnum.Equals, variables[3]),
+				new Constraint(4, variables[0], CompareEnum.Equals, variables[3])
+			};
+			Approvals.Verify(ConstraintManager.GetRedundandConstraints(constraints, false).ToPrettyString());
+		}
+
+		[TestMethod]
+		public void WhenInvertedChainA_to_D_and_A_is_D_ThenA_is_D_isRedundand()
+		{
+			var variables = new List<Variable>()
+			{
+				new Variable("A", null),
+				new Variable("B", null),
+				new Variable("C", null),
+				new Variable("D", null)
+			};
+			var domains = new List<Domain>
+			{
+				new Domain("red", 1),
+				new Domain("blue", 2)
+			};
+			var constraints = new List<Constraint>
+			{
+				new Constraint(1, variables[0], CompareEnum.Equals, variables[1]),
+				new Constraint(2, variables[2], CompareEnum.Equals, variables[1]),
+				new Constraint(3, variables[2], CompareEnum.Equals, variables[3]),
+				new Constraint(4, variables[0], CompareEnum.Equals, variables[3])
+			};
+			Approvals.Verify(ConstraintManager.GetRedundandConstraints(constraints, false).ToPrettyString());
+		}
 		#endregion
 	}
 }
