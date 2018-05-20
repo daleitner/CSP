@@ -45,32 +45,111 @@ namespace CSP.Calculation
 		private static List<Constraint> GetTransitiveConstraints(List<Constraint> constraints)
 		{
 			var transitives = new List<Constraint>();
-			bool foundtransitive;
+			var nodes = constraints.Select(x => x.X).ToList();
+			nodes.AddRange(constraints.Select(x => x.Y));
+			nodes = nodes.Distinct().ToList();
+
+			foreach (var variable in nodes)
+			{
+				transitives.AddRange(GetTransitiveConstraintsForNode(variable, constraints.Where(x => !transitives.Contains(x)).ToList(), null, new List<Variable> { variable}));
+			}
+			return transitives;
+		}
+
+		private static List<Constraint> GetTransitiveConstraintsForNode(Variable sourceNode, List<Constraint> constraints, Constraint currentConstraint, List<Variable> currentVariables)
+		{
+			var transitives = new List<Constraint>();
+			bool transitivesFound;
 			do
 			{
-				foundtransitive = false;
-				var remainingConstraints = constraints.Where(x => !transitives.Contains(x)).ToList();
-				for (var i = 0; i < remainingConstraints.Count && !foundtransitive; i++)
+				transitivesFound = false;
+				var inspectedConstraints =
+					constraints.Where(x => !transitives.Contains(x) && (x.X == currentVariables.Last() || x.Y == currentVariables.Last()) && x != currentConstraint);
+				foreach (var constraint in inspectedConstraints)
 				{
-					if (remainingConstraints[i].Comparator == CompareEnum.Equals)
-					{
-						var chainConstraints = remainingConstraints.Where(x => x.Comparator == CompareEnum.Equals && x.X == remainingConstraints[i].Y).ToList();
-						for (var j = 0; j < chainConstraints.Count && !foundtransitive; j++)
-						{
-							var transitiveConstraint = remainingConstraints.FirstOrDefault(x => x.Comparator == CompareEnum.Equals &&
-								(x.X == remainingConstraints[i].X && x.Y == chainConstraints[j].Y ||
-								x.Y == remainingConstraints[i].X && x.X == chainConstraints[j].Y));
-							if (transitiveConstraint == null)
-								continue;
+					if (transitivesFound)
+						break;
 
-							transitives.Add(transitiveConstraint);
-							foundtransitive = true;
-						}
+					var targetNode = constraint.X == currentVariables.Last() ? constraint.Y : constraint.X;
+					if (PossibleLastElementOfChain(constraint, currentConstraint, currentVariables.Last()))
+					{
+						if (targetNode == sourceNode)
+							return new List<Constraint> {constraint};
+					}
+
+					if(!IsChain(constraint, currentConstraint, currentVariables.Last()) || currentVariables.Contains(targetNode))
+						continue;
+
+					currentVariables.Add(targetNode);
+					var foundTransitives = GetTransitiveConstraintsForNode(sourceNode,
+						constraints.Where(x => !transitives.Contains(x)).ToList(), constraint, currentVariables);
+					currentVariables.Remove(targetNode);
+
+					if (foundTransitives.Any())
+					{
+						transitives.AddRange(foundTransitives);
+						transitivesFound = true;
 					}
 				}
-
-			} while (foundtransitive);
+			} while (transitivesFound);
 			return transitives;
+		}
+
+		private static bool IsChain(Constraint constraint, Constraint currentConstraint, Variable currentVariable)
+		{
+			if (currentConstraint == null)
+				return true;
+
+			if (constraint.Comparator == CompareEnum.NotEquals)
+				return false;
+
+			if (constraint.Comparator == CompareEnum.Equals && currentConstraint.Comparator == CompareEnum.Equals)
+				return true;
+
+			var cIsInverted = constraint.Y == currentVariable;
+			var ccIsInverted = currentConstraint.X == currentVariable;
+
+			if (!ccIsInverted && !cIsInverted)
+			{
+				return constraint.Comparator == currentConstraint.Comparator;
+			}
+
+			if (!ccIsInverted || !cIsInverted)
+			{
+				return currentConstraint.Comparator == CompareEnum.Greater && constraint.Comparator == CompareEnum.Smaller ||
+				       currentConstraint.Comparator == CompareEnum.Smaller && constraint.Comparator == CompareEnum.Greater;
+			}
+
+			return constraint.Comparator == currentConstraint.Comparator;
+		}
+
+		private static bool PossibleLastElementOfChain(Constraint constraint, Constraint currentConstraint, Variable currentVariable)
+		{
+			if (currentConstraint == null)
+				return false;
+
+			if (constraint.Comparator == CompareEnum.NotEquals)
+				return false;
+
+			if (constraint.Comparator == CompareEnum.Equals && currentConstraint.Comparator == CompareEnum.Equals)
+				return true;
+
+			var cIsInverted = constraint.Y == currentVariable;
+			var ccIsInverted = currentConstraint.X == currentVariable;
+
+			if (!ccIsInverted && !cIsInverted)
+			{
+				return currentConstraint.Comparator == CompareEnum.Greater && constraint.Comparator == CompareEnum.Smaller ||
+				       currentConstraint.Comparator == CompareEnum.Smaller && constraint.Comparator == CompareEnum.Greater;
+			}
+
+			if (!ccIsInverted || !cIsInverted)
+			{
+				return currentConstraint.Comparator == CompareEnum.Smaller && constraint.Comparator == CompareEnum.Smaller ||
+				       currentConstraint.Comparator == CompareEnum.Greater && constraint.Comparator == CompareEnum.Greater;
+			}
+
+			return constraint.Comparator != currentConstraint.Comparator;
 		}
 	}
 }
