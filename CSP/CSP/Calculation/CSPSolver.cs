@@ -10,24 +10,33 @@ namespace CSP.Calculation
 	{
 		public static CSPContainer Solve(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
 		{
-			var redundandConstraints = ConstraintManager.GetRedundandConstraints(constraints, isPairwiseDisjunct);
-			foreach (var redundandConstraint in redundandConstraints)
-			{
-				constraints.Remove(redundandConstraint);
-			}
 			var notMatched = ConstraintManager.GetNotMatchedConstraints(constraints, isPairwiseDisjunct);
 			foreach (var constraint in notMatched)
 			{
 				constraints.Remove(constraint);
 			}
-
-			var circles = ConstraintManager.GetCircles(constraints);
-			foreach (var circle in circles)
+			var circles = ConstraintManager.GetCircles(constraints, worker);
+			worker.ReportProgress(0);
+			var toRemoveConstraints = new List<Constraint>();
+			for (var index = 0; index < circles.Count; index++)
 			{
+				worker.ReportProgress(index*100/circles.Count);
+				var circle = circles[index];
+				if (circle.Any(c => toRemoveConstraints.Contains(c)))
+					continue;
 				var inconsistentConstraint = ConstraintManager.GetInconsistendConstraint(circle, constraints);
-				notMatched.Add(inconsistentConstraint);
+				toRemoveConstraints.Add(inconsistentConstraint);
 				constraints.Remove(inconsistentConstraint);
 			}
+
+			notMatched.AddRange(toRemoveConstraints.Distinct());
+			worker.ReportProgress(0);
+			var redundandConstraints = ConstraintManager.GetRedundandConstraints(constraints, isPairwiseDisjunct);
+			foreach (var redundandConstraint in redundandConstraints)
+			{
+				constraints.Remove(redundandConstraint);
+			}
+
 			SetVariablesWithNoConstraints(variables, domains, constraints, isPairwiseDisjunct, worker);
 			SolveCSP(variables, domains, constraints, isPairwiseDisjunct, worker);
 			
@@ -36,6 +45,17 @@ namespace CSP.Calculation
 				if(!IsSatisfied(constraint))
 					notMatched.Add(constraint);
 			}
+
+			for (var index = 0; index < notMatched.Count; index++)
+			{
+				var constraint = notMatched[index];
+				if (IsSatisfied(constraint))
+				{
+					notMatched.Remove(constraint);
+					index--;
+				}
+			}
+
 			return new CSPContainer {Assignments = variables, NotMatchedConstraints = notMatched};
 		}
 

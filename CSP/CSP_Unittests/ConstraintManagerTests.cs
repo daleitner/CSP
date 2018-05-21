@@ -49,7 +49,7 @@ namespace CSP_Unittests
 				new Constraint(2, variables[1], CompareEnum.Greater, variables[2]),
 				new Constraint(3, variables[2], CompareEnum.Greater, variables[0])
 			};
-			Approvals.Verify(ConstraintManager.GetCircles(constraints).ToPrettyString());
+			Approvals.Verify(ConstraintManager.GetCircles(constraints, null).ToPrettyString());
 		}
 
 		[TestMethod]
@@ -67,7 +67,7 @@ namespace CSP_Unittests
 				new Constraint(2, variables[1], CompareEnum.Greater, variables[2]),
 				new Constraint(3, variables[0], CompareEnum.Smaller, variables[2])
 			};
-			Approvals.Verify(ConstraintManager.GetCircles(constraints).ToPrettyString());
+			Approvals.Verify(ConstraintManager.GetCircles(constraints, null).ToPrettyString());
 		}
 
 		[TestMethod]
@@ -88,7 +88,7 @@ namespace CSP_Unittests
 				new Constraint(3, variables[1], CompareEnum.Smaller, variables[3]),
 				new Constraint(4, variables[0], CompareEnum.Greater, variables[3])
 			};
-			Approvals.Verify(ConstraintManager.GetCircles(constraints).ToPrettyString());
+			Approvals.Verify(ConstraintManager.GetCircles(constraints, null).ToPrettyString());
 		}
 
 		#endregion
@@ -113,7 +113,7 @@ namespace CSP_Unittests
 				new Constraint(3, variables[1], CompareEnum.Smaller, variables[3]),
 				new Constraint(4, variables[0], CompareEnum.Greater, variables[3])
 			};
-			var circle = ConstraintManager.GetCircles(constraints).First();
+			var circle = ConstraintManager.GetCircles(constraints, null).First();
 
 			Approvals.Verify(ConstraintManager.GetInconsistendConstraint(circle, constraints).ToPrettyString());
 		}
@@ -139,7 +139,7 @@ namespace CSP_Unittests
 				new Constraint(5, variables[1], CompareEnum.Smaller, variables[4]),
 				new Constraint(6, variables[4], CompareEnum.Smaller, variables[2])
 			};
-			var circle = ConstraintManager.GetCircles(constraints).First();
+			var circle = ConstraintManager.GetCircles(constraints, null).First();
 
 			Approvals.Verify(ConstraintManager.GetInconsistendConstraint(circle, constraints).ToPrettyString());
 		}
@@ -165,7 +165,7 @@ namespace CSP_Unittests
 				new Constraint(5, variables[0], CompareEnum.Greater, variables[4]),
 				new Constraint(6, variables[4], CompareEnum.Greater, variables[3])
 			};
-			var circle = ConstraintManager.GetCircles(constraints).First();
+			var circle = ConstraintManager.GetCircles(constraints, null).First();
 
 			Approvals.Verify(ConstraintManager.GetInconsistendConstraint(circle, constraints).ToPrettyString());
 		}

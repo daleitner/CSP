@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -152,17 +153,20 @@ namespace CSP.Calculation
 			return constraint.Comparator != currentConstraint.Comparator;
 		}
 
-		public static List<List<Constraint>> GetCircles(List<Constraint> constraints)
+		public static List<List<Constraint>> GetCircles(List<Constraint> constraints, BackgroundWorker worker)
 		{
 			var circles = new List<List<Constraint>>();
 			var nodes = constraints.Select(x => x.X).ToList();
 			nodes.AddRange(constraints.Select(x => x.Y));
 			nodes = nodes.Distinct().ToList();
 
-			foreach (var variable in nodes)
+			for (var index = 0; index < nodes.Count; index++)
 			{
-				var nodeCircles = GetCompareCirclesRecursive(variable, constraints.Where(x => x.Comparator == CompareEnum.Greater || x.Comparator == CompareEnum.Smaller).ToList(),
-					new List<Constraint>(), new List<Variable> { variable});
+				worker?.ReportProgress(index*100/nodes.Count);
+				var variable = nodes[index];
+				var nodeCircles = GetCompareCirclesRecursive(variable,
+					constraints.Where(x => x.Comparator == CompareEnum.Greater || x.Comparator == CompareEnum.Smaller).ToList(),
+					new List<Constraint>(), new List<Variable> {variable});
 				circles.AddRange(nodeCircles);
 			}
 
