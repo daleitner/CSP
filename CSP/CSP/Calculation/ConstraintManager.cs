@@ -151,5 +151,181 @@ namespace CSP.Calculation
 
 			return constraint.Comparator != currentConstraint.Comparator;
 		}
+
+		public static List<List<Constraint>> GetCircles(List<Constraint> constraints)
+		{
+			var circles = new List<List<Constraint>>();
+			var nodes = constraints.Select(x => x.X).ToList();
+			nodes.AddRange(constraints.Select(x => x.Y));
+			nodes = nodes.Distinct().ToList();
+
+			foreach (var variable in nodes)
+			{
+				var nodeCircles = GetCompareCirclesRecursive(variable, constraints.Where(x => x.Comparator == CompareEnum.Greater || x.Comparator == CompareEnum.Smaller).ToList(),
+					new List<Constraint>(), new List<Variable> { variable});
+				circles.AddRange(nodeCircles);
+			}
+
+			for (var i = 0; i < circles.Count; i++)
+			{
+				for (var j = i + 1; j < circles.Count; j++)
+				{
+					if(circles[i].Count != circles[j].Count)
+						continue;
+					if (circles[i].All(edge => circles[j].Contains(edge)))
+					{
+						circles.RemoveAt(j);
+						j--;
+					}
+				}
+			}
+			return circles;
+		}
+
+		private static List<List<Constraint>> GetCompareCirclesRecursive(Variable root, List<Constraint> constraints, List<Constraint> path, List<Variable> currentNodes)
+		{
+			var circles = new List<List<Constraint>>();
+			var edges = constraints.Where(x => (x.X == currentNodes.Last() || x.Y == currentNodes.Last()) && x != path.LastOrDefault());
+
+			foreach (var edge in edges)
+			{
+				var targetNode = edge.X == currentNodes.Last() ? edge.Y : edge.X;
+				if (path.Any())
+				{
+					if (edge.X == currentNodes.Last())
+					{
+						if (path.Last().X == edge.X)
+						{
+							if (edge.Comparator == path.Last().Comparator)
+								continue;
+						}
+						else
+						{
+							if (edge.Comparator != path.Last().Comparator)
+								continue;
+						}
+					}
+					else
+					{
+						if (path.Last().X == edge.Y)
+						{
+							if (edge.Comparator != path.Last().Comparator)
+								continue;
+						}
+						else
+						{
+							if (edge.Comparator == path.Last().Comparator)
+								continue;
+						}
+					}
+				}
+
+				path.Add(edge);
+				if (targetNode == root)
+				{
+					circles.Add(new List<Constraint>(path));
+				}
+				else if(!currentNodes.Contains(targetNode))
+				{
+					currentNodes.Add(targetNode);
+					circles.AddRange(GetCompareCirclesRecursive(root, constraints, path, currentNodes));
+					currentNodes.Remove(targetNode);
+				}
+				path.Remove(edge);
+			}
+			return circles;
+		}
+
+		private static CompareEnum Opposite(CompareEnum comparison)
+		{
+			switch (comparison)
+			{
+				case CompareEnum.Equals:
+					return CompareEnum.NotEquals;
+				case CompareEnum.NotEquals:
+					return CompareEnum.Equals;
+				case CompareEnum.Greater:
+					return CompareEnum.Smaller;
+				case CompareEnum.Smaller:
+					return CompareEnum.Greater;
+				default:
+					return CompareEnum.Default;
+			}
+		}
+
+		public static Constraint GetInconsistendConstraint(List<Constraint> circle, List<Constraint> constraints)
+		{
+			var maxContradictions = int.MinValue;
+			var constraintWithMaxContradictions = circle.Last();
+			foreach (var edge in circle)
+			{
+				var contradictions = CountContradictions(edge, constraints);
+				if (contradictions >= maxContradictions)
+				{
+					maxContradictions = contradictions;
+					constraintWithMaxContradictions = edge;
+				}
+			}
+			return constraintWithMaxContradictions;
+		}
+
+		private static int CountContradictions(Constraint edge, List<Constraint> constraints)
+		{
+			var counter = 0;
+			var nodes = GetRemainingNodes(edge, constraints);
+			foreach (var node in nodes)
+			{
+				if (FoundContradiction(node, edge, constraints))
+					counter++;
+				if (FoundConfirmation(node, edge, constraints))
+					counter--;
+			}
+
+			return counter;
+		}
+
+		private static bool FoundContradiction(Variable node, Constraint edge, List<Constraint> constraints)
+		{
+			if (constraints.Any(x => x.X == node && x.Y == edge.X && x.Comparator == edge.Comparator) &&
+			    constraints.Any(x => x.X == node && x.Y == edge.Y && x.Comparator == Opposite(edge.Comparator)))
+				return true;
+			if (constraints.Any(x => x.X == node && x.Y == edge.X && x.Comparator == edge.Comparator) &&
+			    constraints.Any(x => x.X == edge.Y && x.Y == node && x.Comparator == edge.Comparator))
+				return true;
+			if (constraints.Any(x => x.X == edge.X && x.Y == node && x.Comparator == Opposite(edge.Comparator)) &&
+			    constraints.Any(x => x.X == node && x.Y == edge.Y && x.Comparator == Opposite(edge.Comparator)))
+				return true;
+			if (constraints.Any(x => x.X == edge.X && x.Y == node && x.Comparator == Opposite(edge.Comparator)) &&
+			    constraints.Any(x => x.X == edge.Y && x.Y == node && x.Comparator == edge.Comparator))
+				return true;
+			return false;
+		}
+
+		private static bool FoundConfirmation(Variable node, Constraint edge, List<Constraint> constraints)
+		{
+			if (constraints.Any(x => x.X == node && x.Y == edge.X && x.Comparator == Opposite(edge.Comparator)) &&
+			    constraints.Any(x => x.X == node && x.Y == edge.Y && x.Comparator == edge.Comparator))
+				return true;
+			if (constraints.Any(x => x.X == node && x.Y == edge.X && x.Comparator == Opposite(edge.Comparator)) &&
+			    constraints.Any(x => x.X == edge.Y && x.Y == node && x.Comparator == Opposite(edge.Comparator)))
+				return true;
+			if (constraints.Any(x => x.X == edge.X && x.Y == node && x.Comparator == edge.Comparator) &&
+			    constraints.Any(x => x.X == node && x.Y == edge.Y && x.Comparator == edge.Comparator))
+				return true;
+			if (constraints.Any(x => x.X == edge.X && x.Y == node && x.Comparator == edge.Comparator) &&
+			    constraints.Any(x => x.X == edge.Y && x.Y == node && x.Comparator == Opposite(edge.Comparator)))
+				return true;
+			return false;
+		}
+
+		private static List<Variable> GetRemainingNodes(Constraint edge, List<Constraint> constraints)
+		{
+			var nodes = constraints.Select(x => x.X).ToList();
+			nodes.AddRange(constraints.Select(x => x.Y));
+			nodes = nodes.Distinct().ToList();
+			nodes.Remove(edge.X);
+			nodes.Remove(edge.Y);
+			return nodes;
+		}
 	}
 }

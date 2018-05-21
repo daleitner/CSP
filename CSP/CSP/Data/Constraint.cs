@@ -1,4 +1,6 @@
-﻿namespace CSP.Data
+﻿using System;
+
+namespace CSP.Data
 {
 	public class Constraint
 	{
@@ -27,6 +29,34 @@
 			       constraint.Comparator == CompareEnum.Smaller && Comparator == CompareEnum.Greater ||
 			       constraint.Comparator == CompareEnum.GreaterOrEquals && Comparator == CompareEnum.SmallerOrEquals ||
 			       constraint.Comparator == CompareEnum.SmallerOrEquals && Comparator == CompareEnum.GreaterOrEquals;
+		}
+
+		public override string ToString()
+		{
+			return X.Name + " " + ComparatorToString() + " " + Y.Name;
+		}
+
+		private string ComparatorToString()
+		{
+			switch (Comparator)
+			{
+				case CompareEnum.Default:
+					return "_";
+				case CompareEnum.Equals:
+					return "=";
+				case CompareEnum.NotEquals:
+					return "!=";
+				case CompareEnum.Greater:
+					return ">";
+				case CompareEnum.Smaller:
+					return "<";
+				case CompareEnum.GreaterOrEquals:
+					return ">=";
+				case CompareEnum.SmallerOrEquals:
+					return "<=";
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
 		}
 	}
 }

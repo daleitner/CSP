@@ -52,7 +52,13 @@
 			<Rectangle Fill="Black" HorizontalAlignment="Left" Width="2"></Rectangle>
 			<Label x:Name="label3" Content="CSP" HorizontalAlignment="Center" FontSize="30" FontWeight="Bold" Margin="0,10,0,0" VerticalAlignment="Top"/>
 			<Label x:Name="label4" Content="Solution:" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top"/>
-			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,100,10,230" ItemsSource="{Binding Path=Assignments}" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False"></DataGrid>
+			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,100,10,230" ItemsSource="{Binding Path=Assignments}" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False" AutoGenerateColumns="False">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Name" Binding="{Binding Name}"></DataGridTextColumn>
+					<DataGridTextColumn Header="Domain" Binding="{Binding Value.Name}"></DataGridTextColumn>
+					<DataGridTextColumn Header="Value" Binding="{Binding Value.Value}"></DataGridTextColumn>
+				</DataGrid.Columns>
+			</DataGrid>
 			<Label x:Name="label5" Content="Not matched Constraints:" HorizontalAlignment="Left" Margin="10,0,0,185" VerticalAlignment="Bottom"/>
 			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10,0,10,50" ItemsSource="{Binding Path=NotMatchedConstraints}" Height="130" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False"></DataGrid>
 			<Button x:Name="button6" Content="Save Result" HorizontalAlignment="Right" Margin="0,0,10,20" VerticalAlignment="Bottom" Width="100" Command="{Binding Path=SaveResultCommand}"/>

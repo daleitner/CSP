@@ -20,6 +20,14 @@ namespace CSP.Calculation
 			{
 				constraints.Remove(constraint);
 			}
+
+			var circles = ConstraintManager.GetCircles(constraints);
+			foreach (var circle in circles)
+			{
+				var inconsistentConstraint = ConstraintManager.GetInconsistendConstraint(circle, constraints);
+				notMatched.Add(inconsistentConstraint);
+				constraints.Remove(inconsistentConstraint);
+			}
 			SetVariablesWithNoConstraints(variables, domains, constraints, isPairwiseDisjunct, worker);
 			SolveCSP(variables, domains, constraints, isPairwiseDisjunct, worker);
 			
