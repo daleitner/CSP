@@ -24,9 +24,8 @@ namespace CSP.Calculation
 				var circles = ConstraintManager.GetCircles(constraints, level);
 				worker.ReportProgress(level*100/constraints.Count);
 				var toRemoveConstraints = new List<Constraint>();
-				for (var index = 0; index < circles.Count; index++)
+				foreach (var circle in circles)
 				{
-					var circle = circles[index];
 					if (circle.Any(c => toRemoveConstraints.Contains(c)))
 						continue;
 					var inconsistentConstraint = ConstraintManager.GetInconsistendConstraint(circle, constraints);
@@ -173,20 +172,20 @@ namespace CSP.Calculation
 		private static List<Domain> GetLegalValues(Variable variable, List<Domain> domains, List<Constraint> constraints)
 		{
 			var legalValues = new List<Domain>();
+			var subset = constraints.Where(x => x.X == variable || x.Y == variable).ToList();
 			foreach (var domain in domains)
 			{
 				variable.Value = domain;
-				if (IsLegal(variable, constraints))
+				if (IsLegal(subset))
 					legalValues.Add(domain);
 			}
 			variable.Value = null;
 			return legalValues;
 		}
 
-		private static bool IsLegal(Variable variable, List<Constraint> constraints)
+		private static bool IsLegal(IEnumerable<Constraint> constraints)
 		{
-			var subset = constraints.Where(x => x.X == variable || x.Y == variable);
-			foreach (var constraint in subset)
+			foreach (var constraint in constraints)
 			{
 				if (!IsSatisfied(constraint))
 					return false;
