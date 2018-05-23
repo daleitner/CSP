@@ -166,7 +166,7 @@ namespace CSP.Calculation
 				var variable = nodes[index];
 				var nodeCircles = GetCompareCirclesRecursive(variable,
 					constraints.Where(x => x.Comparator == CompareEnum.Greater || x.Comparator == CompareEnum.Smaller).ToList(),
-					new List<Constraint>(), new List<Variable> {variable});
+					new List<Constraint>(), new List<Variable> {variable}, nodes.GetRange(0, index));
 				circles.AddRange(nodeCircles);
 			}
 
@@ -186,7 +186,7 @@ namespace CSP.Calculation
 			return circles;
 		}
 
-		private static List<List<Constraint>> GetCompareCirclesRecursive(Variable root, List<Constraint> constraints, List<Constraint> path, List<Variable> currentNodes)
+		private static List<List<Constraint>> GetCompareCirclesRecursive(Variable root, List<Constraint> constraints, List<Constraint> path, List<Variable> currentNodes, List<Variable> inspectedNodes)
 		{
 			var circles = new List<List<Constraint>>();
 			var edges = constraints.Where(x => (x.X == currentNodes.Last() || x.Y == currentNodes.Last()) && x != path.LastOrDefault());
@@ -224,6 +224,9 @@ namespace CSP.Calculation
 					}
 				}
 
+				if (inspectedNodes.Contains(targetNode))
+					continue;
+
 				path.Add(edge);
 				if (targetNode == root)
 				{
@@ -232,7 +235,7 @@ namespace CSP.Calculation
 				else if(!currentNodes.Contains(targetNode))
 				{
 					currentNodes.Add(targetNode);
-					circles.AddRange(GetCompareCirclesRecursive(root, constraints, path, currentNodes));
+					circles.AddRange(GetCompareCirclesRecursive(root, constraints, path, currentNodes, inspectedNodes));
 					currentNodes.Remove(targetNode);
 				}
 				path.Remove(edge);
