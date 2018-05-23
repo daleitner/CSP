@@ -147,28 +147,6 @@ namespace CSP.Calculation
 			return mrv;
 		}
 
-		private static List<Constraint> DetectContradictions(List<Constraint> constraints)
-		{
-			
-			return null;
-		}
-
-		private static List<Constraint> DetectCircles(List<Constraint> constraints)
-		{
-			foreach (var inspectedConstraint in constraints)
-			{
-				var x = inspectedConstraint.X;
-				var y = inspectedConstraint.Y;
-				var potentialZs =
-					constraints.Where(c => c != inspectedConstraint && c.X == x).Select(z => z.Y).ToList();
-				potentialZs.AddRange(constraints.Where(c => c != inspectedConstraint && c.Y == x).Select(z => z.X));
-				potentialZs = potentialZs.Distinct().ToList();
-				List<Variable>zs = potentialZs.Where(z => 
-				constraints.Exists(c => c.X == z && c.Y == y || c.X == y && c.Y == z)).ToList();
-			}
-			return null;
-		}
-
 		private static List<Domain> GetLegalValues(Variable variable, List<Domain> domains, List<Constraint> constraints)
 		{
 			var legalValues = new List<Domain>();
@@ -176,22 +154,11 @@ namespace CSP.Calculation
 			foreach (var domain in domains)
 			{
 				variable.Value = domain;
-				if (IsLegal(subset))
+				if (IsConsistent(subset))
 					legalValues.Add(domain);
 			}
 			variable.Value = null;
 			return legalValues;
-		}
-
-		private static bool IsLegal(IEnumerable<Constraint> constraints)
-		{
-			foreach (var constraint in constraints)
-			{
-				if (!IsSatisfied(constraint))
-					return false;
-			}
-
-			return true;
 		}
 
 		private static bool IsConsistent(List<Constraint> constraints)
