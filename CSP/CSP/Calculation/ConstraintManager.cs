@@ -153,7 +153,7 @@ namespace CSP.Calculation
 			return constraint.Comparator != currentConstraint.Comparator;
 		}
 
-		public static List<List<Constraint>> GetCircles(List<Constraint> constraints, BackgroundWorker worker)
+		public static List<List<Constraint>> GetCircles(List<Constraint> constraints, int maxLevel)
 		{
 			var circles = new List<List<Constraint>>();
 			var nodes = constraints.Select(x => x.X).ToList();
@@ -162,11 +162,10 @@ namespace CSP.Calculation
 
 			for (var index = 0; index < nodes.Count; index++)
 			{
-				worker?.ReportProgress(index*100/nodes.Count);
 				var variable = nodes[index];
 				var nodeCircles = GetCompareCirclesRecursive(variable,
 					constraints.Where(x => x.Comparator == CompareEnum.Greater || x.Comparator == CompareEnum.Smaller).ToList(),
-					new List<Constraint>(), new List<Variable> {variable}, nodes.GetRange(0, index));
+					new List<Constraint>(), new List<Variable> {variable}, nodes.GetRange(0, index), maxLevel, 1);
 				circles.AddRange(nodeCircles);
 			}
 
@@ -186,8 +185,10 @@ namespace CSP.Calculation
 			return circles;
 		}
 
-		private static List<List<Constraint>> GetCompareCirclesRecursive(Variable root, List<Constraint> constraints, List<Constraint> path, List<Variable> currentNodes, List<Variable> inspectedNodes)
+		private static List<List<Constraint>> GetCompareCirclesRecursive(Variable root, List<Constraint> constraints, List<Constraint> path, List<Variable> currentNodes, List<Variable> inspectedNodes, int maxLevel, int currentLevel)
 		{
+			if(currentLevel > maxLevel)
+				return new List<List<Constraint>>();
 			var circles = new List<List<Constraint>>();
 			var edges = constraints.Where(x => (x.X == currentNodes.Last() || x.Y == currentNodes.Last()) && x != path.LastOrDefault());
 
@@ -235,7 +236,7 @@ namespace CSP.Calculation
 				else if(!currentNodes.Contains(targetNode))
 				{
 					currentNodes.Add(targetNode);
-					circles.AddRange(GetCompareCirclesRecursive(root, constraints, path, currentNodes, inspectedNodes));
+					circles.AddRange(GetCompareCirclesRecursive(root, constraints, path, currentNodes, inspectedNodes, maxLevel, currentLevel+1));
 					currentNodes.Remove(targetNode);
 				}
 				path.Remove(edge);

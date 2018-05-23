@@ -15,21 +15,28 @@ namespace CSP.Calculation
 			{
 				constraints.Remove(constraint);
 			}
-			var circles = ConstraintManager.GetCircles(constraints, worker);
-			worker.ReportProgress(0);
-			var toRemoveConstraints = new List<Constraint>();
-			for (var index = 0; index < circles.Count; index++)
-			{
-				worker.ReportProgress(index*100/circles.Count);
-				var circle = circles[index];
-				if (circle.Any(c => toRemoveConstraints.Contains(c)))
-					continue;
-				var inconsistentConstraint = ConstraintManager.GetInconsistendConstraint(circle, constraints);
-				toRemoveConstraints.Add(inconsistentConstraint);
-				constraints.Remove(inconsistentConstraint);
-			}
 
-			notMatched.AddRange(toRemoveConstraints.Distinct());
+			int level = 2;
+			worker.ReportProgress(0);
+			do
+			{
+				level++;
+				var circles = ConstraintManager.GetCircles(constraints, level);
+				worker.ReportProgress(level*100/constraints.Count);
+				var toRemoveConstraints = new List<Constraint>();
+				for (var index = 0; index < circles.Count; index++)
+				{
+					var circle = circles[index];
+					if (circle.Any(c => toRemoveConstraints.Contains(c)))
+						continue;
+					var inconsistentConstraint = ConstraintManager.GetInconsistendConstraint(circle, constraints);
+					toRemoveConstraints.Add(inconsistentConstraint);
+					constraints.Remove(inconsistentConstraint);
+				}
+
+				notMatched.AddRange(toRemoveConstraints.Distinct());
+			} while (level <= constraints.Count);
+
 			worker.ReportProgress(0);
 			var redundandConstraints = ConstraintManager.GetRedundandConstraints(constraints, isPairwiseDisjunct);
 			foreach (var redundandConstraint in redundandConstraints)
