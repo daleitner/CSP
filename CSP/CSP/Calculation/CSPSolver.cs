@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using CSP.Data;
 
@@ -91,8 +92,10 @@ namespace CSP.Calculation
 			var unassigned = variables.Where(x => x.Value == null).ToList();
 			if (unassigned.Count == 0)
 				return true;
-
 			var next = MinimumRemainingValues(unassigned, domains, constraints);
+			if (!next.LegalValues.Any())
+				return false;
+
 			var domainOrder = LeastConstrainingValueOrder(next, domains, constraints, isPairwiseDisjunct);
 			foreach (var domain in domainOrder)
 			{
@@ -115,33 +118,36 @@ namespace CSP.Calculation
 
 		private static MrvResult MinimumRemainingValues(List<Variable> unassignedVariables, List<Domain> domains, List<Constraint> constraints)
 		{
-			var legalValues = new List<List<Domain>>();
+			var legalValuesDict = new Dictionary<Variable, List<Domain>>();
 			foreach (var variable in unassignedVariables)
 			{
 				var cnt = GetLegalValues(variable, domains, constraints);
-				legalValues.Add(cnt);
+				if (!cnt.Any())
+					return new MrvResult {Variable = variable, LegalValues = cnt};
+				legalValuesDict.Add(variable, cnt);
 			}
 
-			var max = legalValues[0].Count;
-			MrvResult mrv = new MrvResult {Variable = unassignedVariables[0], LegalValues = legalValues[0]};
-			bool allEqual = true;
-			for(var i = 1; i< unassignedVariables.Count; i++)
+			var min = legalValuesDict[unassignedVariables.First()].Count;
+			var mrv = new MrvResult {Variable = unassignedVariables.First(), LegalValues = legalValuesDict[unassignedVariables.First()]};
+			var allEqual = true;
+			foreach(var unassignedVariable in unassignedVariables)
 			{
-				if (legalValues[i].Count < max)
+				var legalValues = legalValuesDict[unassignedVariable];
+				if (legalValues.Count < min)
 				{
-					max = legalValues[i].Count;
-					mrv.Variable = unassignedVariables[i];
-					mrv.LegalValues = legalValues[i];
+					min = legalValues.Count;
+					mrv.Variable = unassignedVariable;
+					mrv.LegalValues = legalValues;
 					allEqual = false;
 				}
-				else if (legalValues[i].Count > max)
+				else if (legalValues.Count > min)
 					allEqual = false;
 			}
 
 			if (allEqual)
 			{
-				mrv.Variable = MostConstraints(unassignedVariables, constraints);
-				mrv.LegalValues = legalValues[unassignedVariables.IndexOf(mrv.Variable)];
+				mrv.Variable = GetVariableWithMostConstraints(unassignedVariables, constraints);
+				mrv.LegalValues = legalValuesDict[mrv.Variable];
 			}
 
 			return mrv;
@@ -163,12 +169,7 @@ namespace CSP.Calculation
 
 		private static bool IsConsistent(List<Constraint> constraints)
 		{
-			foreach (var constraint in constraints)
-			{
-				if (!IsSatisfied(constraint))
-					return false;
-			}
-			return true;
+			return constraints.All(IsSatisfied);
 		}
 
 		private static bool IsSatisfied(Constraint constraint)
@@ -197,7 +198,7 @@ namespace CSP.Calculation
 			}
 		}
 
-		private static Variable MostConstraints(List<Variable> unassigned, List<Constraint> constraints)
+		private static Variable GetVariableWithMostConstraints(List<Variable> unassigned, List<Constraint> constraints)
 		{
 			var max = -1;
 			Variable result = null;
