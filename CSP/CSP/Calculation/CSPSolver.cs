@@ -45,7 +45,14 @@ namespace CSP.Calculation
 			}
 
 			SetVariablesWithNoConstraints(variables, domains, constraints, isPairwiseDisjunct, worker);
-			SolveCSP(variables, domains, constraints, isPairwiseDisjunct, worker);
+			var dict = new Dictionary<Variable, List<Domain>>();
+			foreach (var variable in variables.Where(x => x.Value == null))
+			{
+				dict.Add(variable, new List<Domain>(domains));
+			}
+
+			if (!SolveCSP(dict, variables.Count, constraints, isPairwiseDisjunct, worker))
+				return new CSPContainer {Assignments = new List<Variable>(), NotMatchedConstraints = new List<Constraint>()};
 			
 			foreach (var constraint in constraints)
 			{
@@ -87,52 +94,70 @@ namespace CSP.Calculation
 			}
 		}
 
-		private static bool SolveCSP(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
+		private static bool SolveCSP(Dictionary<Variable, List<Domain>> variables, int totalVariables, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)
 		{
-			var unassigned = variables.Where(x => x.Value == null).ToList();
-			if (unassigned.Count == 0)
+			if (variables.Count == 0)
 				return true;
-			var next = MinimumRemainingValues(unassigned, domains, constraints);
+			UpdateRemainingValues(variables, constraints, isPairwiseDisjunct);
+			var next = MinimumRemainingValues(variables, constraints);
 			if (!next.LegalValues.Any())
 				return false;
 
-			var domainOrder = LeastConstrainingValueOrder(next, domains, constraints, isPairwiseDisjunct);
+			var domainOrder = LeastConstrainingValueOrder(next, variables, constraints, isPairwiseDisjunct);
 			foreach (var domain in domainOrder)
 			{
 				next.Variable.Value = domain;
 				if (isPairwiseDisjunct)
-					domains.Remove(domain);
-				worker.ReportProgress(variables.Count(x => x.Value != null)*100/variables.Count);
+					variables.Keys.ToList().ForEach(x => variables[x].Remove(domain));
+				var variableDomains = variables[next.Variable];
+				variables.Remove(next.Variable);
+
+				worker.ReportProgress((totalVariables - variables.Count)*100/totalVariables);
 				if (IsConsistent(constraints))
 				{
-					var isSuccess = SolveCSP(variables, domains, constraints, isPairwiseDisjunct, worker);
+					var tmpVariables = new Dictionary<Variable, List<Domain>>();
+					foreach (var variable in variables.Keys)
+					{
+						tmpVariables.Add(variable, new List<Domain>(variables[variable]));
+					}
+					var isSuccess = SolveCSP(tmpVariables, totalVariables, constraints, isPairwiseDisjunct, worker);
 					if (isSuccess)
 						return true;
 				}
+				variables.Add(next.Variable, variableDomains);
+				if (isPairwiseDisjunct)
+					variables.Keys.ToList().ForEach(x => variables[x].Add(domain));
 				next.Variable.Value = null;
-				if(isPairwiseDisjunct)
-					domains.Add(domain);
 			}
 			return false;
 		}
 
-		private static MrvResult MinimumRemainingValues(List<Variable> unassignedVariables, List<Domain> domains, List<Constraint> constraints)
+		private static void UpdateRemainingValues(Dictionary<Variable, List<Domain>> variables, List<Constraint> constraints, bool isPairwiseDisjunct)
 		{
-			var legalValuesDict = new Dictionary<Variable, List<Domain>>();
-			foreach (var variable in unassignedVariables)
+			foreach (var variable in variables.Keys)
 			{
-				var cnt = GetLegalValues(variable, domains, constraints);
-				if (!cnt.Any())
-					return new MrvResult {Variable = variable, LegalValues = cnt};
-				legalValuesDict.Add(variable, cnt);
+				for (var index = 0; index < variables[variable].Count; index++)
+				{
+					var domain = variables[variable][index];
+					variable.Value = domain;
+					if (!IsConsistent(constraints))
+					{
+						variables[variable].Remove(domain);
+						index--;
+					}
+					variable.Value = null;
+				}
 			}
+		}
 
-			var min = legalValuesDict[unassignedVariables.First()].Count;
-			var mrv = new MrvResult {Variable = unassignedVariables.First(), LegalValues = legalValuesDict[unassignedVariables.First()]};
+		private static MrvResult MinimumRemainingValues(Dictionary<Variable, List<Domain>> unassignedVariables, List<Constraint> constraints)
+		{
+			var mrv = new MrvResult {Variable = unassignedVariables.Keys.First(), LegalValues = unassignedVariables[unassignedVariables.Keys.First()]};
+			var min = unassignedVariables[unassignedVariables.Keys.First()].Count;
 			var allEqual = true;
-			foreach(var unassignedVariable in unassignedVariables)
+			foreach(var unassignedVariable in unassignedVariables.Keys)
 			{
-				var legalValues = legalValuesDict[unassignedVariable];
+				var legalValues = unassignedVariables[unassignedVariable];
 				if (legalValues.Count < min)
 				{
 					min = legalValues.Count;
@@ -146,8 +171,8 @@ namespace CSP.Calculation
 
 			if (allEqual)
 			{
-				mrv.Variable = GetVariableWithMostConstraints(unassignedVariables, constraints);
-				mrv.LegalValues = legalValuesDict[mrv.Variable];
+				mrv.Variable = GetVariableWithMostConstraints(unassignedVariables.Keys.ToList(), constraints);
+				mrv.LegalValues = unassignedVariables[mrv.Variable];
 			}
 
 			return mrv;
@@ -221,36 +246,37 @@ namespace CSP.Calculation
 			return result;
 		}
 
-		private static List<Domain> LeastConstrainingValueOrder(MrvResult next, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct)
+		private static List<Domain> LeastConstrainingValueOrder(MrvResult next, Dictionary<Variable, List<Domain>> variables, List<Constraint> constraints, bool isPairwiseDisjunct)
 		{
 			Variable act = next.Variable;
-			var neighbours = GetNeighbours(act, constraints).Where(x => x.Value == null).ToList();
+			var neighbournodes = GetNeighbours(act, constraints).Where(x => x.Value == null).ToList();
+			var neighbours = new Dictionary<Variable, List<Domain>>();
+			var constrainingValues = new Dictionary<Variable, int>();
+			foreach (var node in neighbournodes)
+			{
+				neighbours.Add(node, new List<Domain>(variables[node]));
+				constrainingValues.Add(node, 0);
+			}
 			List<Domain> result = new List<Domain>();
-
 
 			var tmp = new List<Domain>(next.LegalValues);
 			while (tmp.Count > 0)
 			{
 				Domain best = tmp.FirstOrDefault();
-				Dictionary<Variable, int> constrainingValues = new Dictionary<Variable, int>();
-				foreach (var neighbour in neighbours)
-				{
-					constrainingValues.Add(neighbour, 0);
-				}
-				
+				constrainingValues.Keys.ToList().ForEach(x => constrainingValues[x] = 0);
 				foreach (var domain in tmp)
 				{
 					act.Value = domain;
-					if (isPairwiseDisjunct)
-						domains.Remove(domain);
-					var cnt = CountConstrainingValues(neighbours, domains, constraints);
+					if (isPairwiseDisjunct) 
+						neighbours.Keys.ToList().ForEach(x => neighbours[x].Remove(domain));
+					var cnt = CountConstrainingValues(neighbours, constraints);
 					if (IsBetter(cnt, constrainingValues))
 					{
 						constrainingValues = cnt;
 						best = domain;
 					}
 					if(isPairwiseDisjunct)
-						domains.Add(domain);
+						neighbours.Keys.ToList().ForEach(x => neighbours[x].Add(domain));
 				}
 
 				if (!constrainingValues.ContainsValue(0))
@@ -266,24 +292,26 @@ namespace CSP.Calculation
 
 		private static bool IsBetter(Dictionary<Variable, int> cnt, Dictionary<Variable, int> constrainingValues)
 		{
-			var atLeastOneBetter = false;
-			foreach (var variable in cnt.Keys)
+			var tmp = new List<int>(cnt.Values);
+			tmp.Sort();
+			var tmp2 = new List<int>(constrainingValues.Values);
+			tmp2.Sort();
+			for (var i = 0; i < tmp.Count; i++)
 			{
-				if (cnt[variable] < constrainingValues[variable])
+				if (tmp[i] > tmp2[i])
+					return true;
+				if (tmp[i] < tmp2[i])
 					return false;
-				if (cnt[variable] > constrainingValues[variable])
-					atLeastOneBetter = true;
 			}
-
-			return atLeastOneBetter;
+			return false;
 		}
 
-		private static Dictionary<Variable, int> CountConstrainingValues(List<Variable> neighbours, List<Domain> domains, List<Constraint> constraints)
+		private static Dictionary<Variable, int> CountConstrainingValues(Dictionary<Variable, List<Domain>> neighbours, List<Constraint> constraints)
 		{
 			var cnt = new Dictionary<Variable, int>();
-			foreach (var neighbour in neighbours)
+			foreach (var neighbour in neighbours.Keys)
 			{
-				cnt.Add(neighbour, GetLegalValues(neighbour, domains, constraints).Count);
+				cnt.Add(neighbour, GetLegalValues(neighbour, neighbours[neighbour], constraints).Count);
 			}
 
 			return cnt;
