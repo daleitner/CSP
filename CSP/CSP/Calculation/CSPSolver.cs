@@ -154,7 +154,7 @@ namespace CSP.Calculation
 		{
 			var mrv = new MrvResult {Variable = unassignedVariables.Keys.First(), LegalValues = unassignedVariables[unassignedVariables.Keys.First()]};
 			var min = unassignedVariables[unassignedVariables.Keys.First()].Count;
-			var allEqual = true;
+			var mrvVariables = new List<Variable>();
 			foreach(var unassignedVariable in unassignedVariables.Keys)
 			{
 				var legalValues = unassignedVariables[unassignedVariable];
@@ -163,17 +163,14 @@ namespace CSP.Calculation
 					min = legalValues.Count;
 					mrv.Variable = unassignedVariable;
 					mrv.LegalValues = legalValues;
-					allEqual = false;
+					mrvVariables = new List<Variable> {unassignedVariable};
 				}
-				else if (legalValues.Count > min)
-					allEqual = false;
+				else if (legalValues.Count == min)
+					mrvVariables.Add(unassignedVariable);
 			}
 
-			if (allEqual)
-			{
-				mrv.Variable = GetVariableWithMostConstraints(unassignedVariables.Keys.ToList(), constraints);
-				mrv.LegalValues = unassignedVariables[mrv.Variable];
-			}
+			mrv.Variable = GetVariableWithMostConstraints(mrvVariables, constraints);
+			mrv.LegalValues = unassignedVariables[mrv.Variable];
 
 			return mrv;
 		}
