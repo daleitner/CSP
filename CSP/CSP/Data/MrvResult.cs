@@ -6,5 +6,10 @@ namespace CSP.Data
 	{
 		public Variable Variable { get; set; }
 		public List<Domain> LegalValues { get; set; }
+
+		public override string ToString()
+		{
+			return Variable.Name + " (" + LegalValues?.Count + ")";
+		}
 	}
 }
