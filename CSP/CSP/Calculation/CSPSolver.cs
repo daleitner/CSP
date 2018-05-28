@@ -40,11 +40,11 @@ namespace CSP.Calculation
 			worker.ReportProgress(0);
 			var str = "";
 			notMatched.ForEach(x => str += x + "\n");
-			var redundandConstraints = ConstraintManager.GetRedundandConstraints(constraints, isPairwiseDisjunct);
+			/*var redundandConstraints = ConstraintManager.GetRedundandConstraints(constraints, isPairwiseDisjunct);
 			foreach (var redundandConstraint in redundandConstraints)
 			{
 				constraints.Remove(redundandConstraint);
-			}
+			}*/
 
 			SetVariablesWithNoConstraints(variables, domains, constraints, isPairwiseDisjunct, worker);
 			var dict = new Dictionary<Variable, List<Domain>>();
