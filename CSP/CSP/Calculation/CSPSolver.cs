@@ -38,11 +38,13 @@ namespace CSP.Calculation
 			} while (level <= constraints.Count);
 
 			worker.ReportProgress(0);
-			var redundandConstraints = ConstraintManager.GetRedundandConstraints(constraints, isPairwiseDisjunct);
+			var str = "";
+			notMatched.ForEach(x => str += x + "\n");
+			/*var redundandConstraints = ConstraintManager.GetRedundandConstraints(constraints, isPairwiseDisjunct);
 			foreach (var redundandConstraint in redundandConstraints)
 			{
 				constraints.Remove(redundandConstraint);
-			}
+			}*/
 
 			SetVariablesWithNoConstraints(variables, domains, constraints, isPairwiseDisjunct, worker);
 			var dict = new Dictionary<Variable, List<Domain>>();
@@ -51,7 +53,9 @@ namespace CSP.Calculation
 				dict.Add(variable, new List<Domain>(domains));
 			}
 
-			if (!SolveCSP(dict, variables.Count, constraints, isPairwiseDisjunct, worker))
+			if (isPairwiseDisjunct)
+				SolvePairwiseDisjunctCSP(variables.Where(x => x.Value == null).ToList(), domains, variables.Count, constraints, worker);
+			else if (!SolveCSP(dict, variables.Count, constraints, isPairwiseDisjunct, worker))
 				return new CSPContainer {Assignments = new List<Variable>(), NotMatchedConstraints = new List<Constraint>()};
 			
 			foreach (var constraint in constraints)
@@ -130,6 +134,88 @@ namespace CSP.Calculation
 				next.Variable.Value = null;
 			}
 			return false;
+		}
+
+		private static bool SolvePairwiseDisjunctCSP(List<Variable> variables, List<Domain> domains, int totalVariables,
+			List<Constraint> constraints, BackgroundWorker worker)
+		{
+			var sortedVariables = GetSortedVariables(variables, constraints, totalVariables, worker);
+			var sortedDomains = domains.OrderBy(x => x.Value).ToList();
+			for (var i = 0; i < sortedVariables.Count; i++)
+			{
+				sortedVariables[i].Value = sortedDomains[i];
+			}
+			return true;
+		}
+
+		private static List<Variable> GetSortedVariables(List<Variable> variables, List<Constraint> constraints, int totalVariables, BackgroundWorker worker)
+		{
+			var sortedVariables = new List<Variable> { constraints.First().X };
+			var variablesDict = new Dictionary<Variable, bool> { { constraints.First().X, false} };
+			var stack = new List<Variable> { constraints.First().X };
+			while (stack.Any())
+			{
+				worker.ReportProgress(variablesDict.Values.Count(x => x)/totalVariables);
+				var currentVariable = stack.First();
+				var currentConstraints = constraints.Where(x => x.X == currentVariable || x.Y == currentVariable);
+				foreach (var constraint in currentConstraints)
+				{
+					var neighbour = constraint.X == currentVariable ? constraint.Y : constraint.X;
+					if (!sortedVariables.Contains(neighbour))
+					{
+						var indexToInsert = sortedVariables.IndexOf(currentVariable);
+						if (neighbour == constraint.X && constraint.Comparator == CompareEnum.Greater ||
+						    neighbour == constraint.Y && constraint.Comparator == CompareEnum.Smaller)
+							indexToInsert++;
+						sortedVariables.Insert(indexToInsert, neighbour);
+						variablesDict.Add(neighbour, false);
+						stack.Add(neighbour);
+					}
+					else
+					{
+						if (neighbour == constraint.X && constraint.Comparator == CompareEnum.Greater)
+						{
+							if (sortedVariables.IndexOf(neighbour) > sortedVariables.IndexOf(currentVariable))
+								continue;
+							sortedVariables.Remove(neighbour);
+							sortedVariables.Insert(sortedVariables.IndexOf(currentVariable)+1, neighbour);
+							if(variablesDict[neighbour])
+								stack.Insert(1, neighbour);
+						}
+						else if (neighbour == constraint.Y && constraint.Comparator == CompareEnum.Smaller)
+						{
+							if (sortedVariables.IndexOf(currentVariable) < sortedVariables.IndexOf(neighbour))
+								continue;
+							sortedVariables.Remove(neighbour);
+							sortedVariables.Insert(sortedVariables.IndexOf(currentVariable) + 1, neighbour);
+							if (variablesDict[neighbour])
+								stack.Insert(1, neighbour);
+						}
+						else if (neighbour == constraint.X && constraint.Comparator == CompareEnum.Smaller)
+						{
+							if (sortedVariables.IndexOf(neighbour) < sortedVariables.IndexOf(currentVariable))
+								continue;
+							sortedVariables.Remove(neighbour);
+							sortedVariables.Insert(sortedVariables.IndexOf(currentVariable), neighbour);
+							if (variablesDict[neighbour])
+								stack.Insert(1, neighbour);
+						} 
+						else if(neighbour == constraint.Y && constraint.Comparator == CompareEnum.Greater)
+						{
+							if(sortedVariables.IndexOf(currentVariable) > sortedVariables.IndexOf(neighbour))
+								continue;
+							sortedVariables.Remove(neighbour);
+							sortedVariables.Insert(sortedVariables.IndexOf(currentVariable), neighbour);
+							if (variablesDict[neighbour])
+								stack.Insert(1, neighbour);
+						}
+					}
+				}
+
+				variablesDict[currentVariable] = true;
+				stack.RemoveAt(0);
+			}
+			return sortedVariables;
 		}
 
 		private static void UpdateRemainingValues(Dictionary<Variable, List<Domain>> variables, List<Constraint> constraints, bool isPairwiseDisjunct)

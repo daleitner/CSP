@@ -32,13 +32,13 @@
 			<ScrollViewer Margin="0,160,0,30">
 				<ItemsControl ItemsSource="{Binding Path=ConstraintItems}">
 					<ItemsControl.ItemTemplate>
-					<DataTemplate>
-						<StackPanel Orientation="Horizontal">
-							<ComboBox ItemsSource="{Binding Path=AllVariables}" SelectedItem="{Binding Path=SelectedVariable1}" Width="80" DisplayMemberPath="Name"></ComboBox>
+						<DataTemplate>
+							<StackPanel Orientation="Horizontal">
+								<ComboBox ItemsSource="{Binding Path=AllVariables}" SelectedItem="{Binding Path=SelectedVariable1}" Width="80" DisplayMemberPath="Name"></ComboBox>
 								<ComboBox ItemsSource="{Binding Source={StaticResource AllComparators}}" SelectedItem="{Binding Path=SelectedComparator}" Width="80" Margin="5,0,5,0"></ComboBox>
-							<ComboBox ItemsSource="{Binding Path=AllVariables}" SelectedItem="{Binding Path=SelectedVariable2}" Width="80" DisplayMemberPath="Name" Margin="0,0,5,0"></ComboBox>
-							<Button Content="X" Width="30" Command="{Binding Path=RemoveCommand}"></Button>
-						</StackPanel>
+								<ComboBox ItemsSource="{Binding Path=AllVariables}" SelectedItem="{Binding Path=SelectedVariable2}" Width="80" DisplayMemberPath="Name" Margin="0,0,5,0"></ComboBox>
+								<Button Content="X" Width="30" Command="{Binding Path=RemoveCommand}"></Button>
+							</StackPanel>
 						</DataTemplate>
 					</ItemsControl.ItemTemplate>
 				</ItemsControl>
@@ -49,22 +49,26 @@
 			<Button x:Name="button7" Content="Save File" HorizontalAlignment="Center" Margin="0,0,172,0" VerticalAlignment="Bottom" Width="80" Command="{Binding Path=SaveFileCommand}"/>
 		</Grid>
 		<Grid Grid.Column="1">
-			<Rectangle Fill="Black" HorizontalAlignment="Left" Width="2"></Rectangle>
-			<Label x:Name="label3" Content="CSP" HorizontalAlignment="Center" FontSize="30" FontWeight="Bold" Margin="0,10,0,0" VerticalAlignment="Top"/>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="353*"/>
+				<RowDefinition Height="216*"/>
+			</Grid.RowDefinitions>
+			<Rectangle Fill="Black" HorizontalAlignment="Left" Width="2" Grid.RowSpan="2"></Rectangle>
+			<Label x:Name="label3" Content="CSP" HorizontalAlignment="Center" FontSize="30" FontWeight="Bold" Margin="206,10,205,0" VerticalAlignment="Top"/>
 			<Label x:Name="label4" Content="Solution:" HorizontalAlignment="Left" Margin="10,70,0,0" VerticalAlignment="Top"/>
-			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,100,10,230" ItemsSource="{Binding Path=Assignments}" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False" AutoGenerateColumns="False">
+			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,100,10,14.114" ItemsSource="{Binding Path=Assignments}" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False" AutoGenerateColumns="False">
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="Name" Binding="{Binding Name}"></DataGridTextColumn>
 					<DataGridTextColumn Header="Domain" Binding="{Binding Value.Name}"></DataGridTextColumn>
 					<DataGridTextColumn Header="Value" Binding="{Binding Value.Value}"></DataGridTextColumn>
 				</DataGrid.Columns>
 			</DataGrid>
-			<Label x:Name="label5" Content="Not matched Constraints:" HorizontalAlignment="Left" Margin="10,0,0,185" VerticalAlignment="Bottom"/>
-			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Bottom" Margin="10,0,10,50" ItemsSource="{Binding Path=NotMatchedConstraints}" Height="130" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False"></DataGrid>
-			<Button x:Name="button6" Content="Save Result" HorizontalAlignment="Right" Margin="0,0,10,20" VerticalAlignment="Bottom" Width="100" Command="{Binding Path=SaveResultCommand}"/>
-			<ProgressBar x:Name="pb1" HorizontalAlignment="Left" Margin="20,0,10,20" VerticalAlignment="Bottom" Width="100" Height="20" Visibility="{Binding Path=LoadVisibility}" Maximum="100" Minimum="0" Value="{Binding Path=CalculationProgress, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"></ProgressBar>
-			<Label x:Name="label7" Content="{Binding Path=CalculationProgress, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="125,0,2,18" Width="50" VerticalAlignment="Bottom" Visibility="{Binding Path=LoadVisibility}" />
-			<Label x:Name="label6" Content="{Binding Path=Info}" HorizontalAlignment="Stretch" Margin="2,0,2,2" VerticalAlignment="Bottom"/>
+			<Label x:Name="label5" Content="Not matched Constraints:" HorizontalAlignment="Left" Margin="10,5,0,0" VerticalAlignment="Top" Grid.Row="1"/>
+			<DataGrid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="10,31.886,10,50" ItemsSource="{Binding Path=NotMatchedConstraints}" CanUserAddRows="False" CanUserDeleteRows="False" IsManipulationEnabled="False" Grid.Row="1"></DataGrid>
+			<Button x:Name="button6" Content="Save Result" HorizontalAlignment="Right" Margin="0,0,10,20" VerticalAlignment="Bottom" Width="100" Command="{Binding Path=SaveResultCommand}" Grid.Row="1"/>
+			<ProgressBar x:Name="pb1" HorizontalAlignment="Left" Margin="20,0,0,20" VerticalAlignment="Bottom" Width="100" Height="20" Visibility="{Binding Path=LoadVisibility}" Maximum="100" Minimum="0" Value="{Binding Path=CalculationProgress, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" Grid.Row="1"></ProgressBar>
+			<Label x:Name="label7" Content="{Binding Path=CalculationProgress, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Left" Margin="125,0,0,18" Width="50" VerticalAlignment="Bottom" Visibility="{Binding Path=LoadVisibility}" Grid.Row="1" />
+			<Label x:Name="label6" Content="{Binding Path=Info}" HorizontalAlignment="Stretch" Margin="2,0,2,2" VerticalAlignment="Bottom" Grid.Row="1"/>
 		</Grid>
 	</Grid>
 </Window>
