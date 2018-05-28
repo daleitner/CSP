@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -37,12 +38,14 @@ namespace CSP
 		private int _calculationProgress;
 		private Visibility _loadVisibility = Visibility.Collapsed;
 		private CSPContainer _result;
+		private Stopwatch _watch;
 		#endregion
 
 		#region ctors
 
 		public MainViewModel()
 		{
+			_watch = new Stopwatch();
 			_constraintItems = new ObservableCollection<ConstraintViewModel>();
 			_assignments = new ObservableCollection<Variable>();
 			_notMatchedConstraints = new ObservableCollection<Constraint>();
@@ -275,6 +278,7 @@ namespace CSP
 				LoadVisibility = Visibility.Visible;
 				if (!_worker.IsBusy)
 				{
+					_watch.Start();
 					_worker.RunWorkerAsync(constraints);
 				}
 			}
@@ -420,10 +424,12 @@ namespace CSP
 
 		private void _worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
 		{
+			_watch.Stop();
 			Assignments = new ObservableCollection<Variable>(_result.Assignments);
 			NotMatchedConstraints = new ObservableCollection<Constraint>(_result.NotMatchedConstraints);
 			LoadVisibility = Visibility.Collapsed;
 			CalculationProgress = 0;
+			Info = "Duration: " + TimeSpan.FromMilliseconds(_watch.ElapsedMilliseconds);
 		}
 		#endregion
 

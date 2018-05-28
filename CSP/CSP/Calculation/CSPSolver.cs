@@ -248,11 +248,11 @@ namespace CSP.Calculation
 			Variable act = next.Variable;
 			var neighbournodes = GetNeighbours(act, constraints).Where(x => x.Value == null).ToList();
 			var neighbours = new Dictionary<Variable, List<Domain>>();
-			var constrainingValues = new Dictionary<Variable, int>();
+			var constrainingValues = new Dictionary<Variable, List<Domain>>();
 			foreach (var node in neighbournodes)
 			{
 				neighbours.Add(node, new List<Domain>(variables[node]));
-				constrainingValues.Add(node, 0);
+				constrainingValues.Add(node, new List<Domain>());
 			}
 			List<Domain> result = new List<Domain>();
 
@@ -260,7 +260,7 @@ namespace CSP.Calculation
 			while (tmp.Count > 0)
 			{
 				Domain best = tmp.FirstOrDefault();
-				constrainingValues.Keys.ToList().ForEach(x => constrainingValues[x] = 0);
+				constrainingValues.Keys.ToList().ForEach(x => constrainingValues[x] = new List<Domain>());
 				foreach (var domain in tmp)
 				{
 					act.Value = domain;
@@ -276,7 +276,7 @@ namespace CSP.Calculation
 						neighbours.Keys.ToList().ForEach(x => neighbours[x].Add(domain));
 				}
 
-				if (!constrainingValues.ContainsValue(0))
+				if (NeighboursHaveValuesLeft(act, constrainingValues, constraints, isPairwiseDisjunct))
 				{
 					result.Add(best);
 				}
@@ -287,11 +287,46 @@ namespace CSP.Calculation
 			return result;
 		}
 
-		private static bool IsBetter(Dictionary<Variable, int> cnt, Dictionary<Variable, int> constrainingValues)
+		private static bool NeighboursHaveValuesLeft(Variable variable, Dictionary<Variable, List<Domain>> constrainingValues, List<Constraint> constraints, bool isPairwiseDisjunct)
 		{
-			var tmp = new List<int>(cnt.Values);
+			if (constrainingValues.Values.Select(x => x.Count).Contains(0))
+				return false;
+			if (!isPairwiseDisjunct)
+				return true;
+
+			var higherNeighbours = constraints.Where(x => x.X == variable && x.Comparator == CompareEnum.Greater).Select(x => x.Y).ToList();
+			higherNeighbours.AddRange(constraints.Where(x => x.Y == variable && x.Comparator == CompareEnum.Smaller).Select(x => x.X));
+			higherNeighbours = higherNeighbours.Where(x => constrainingValues.Keys.Contains(x)).Distinct().ToList();
+
+			var allLeftDomains = new List<Domain>();
+			foreach (var neighbour in higherNeighbours)
+			{
+				allLeftDomains.AddRange(constrainingValues[neighbour]);
+			}
+			allLeftDomains = allLeftDomains.Distinct().ToList();
+			if (allLeftDomains.Count < higherNeighbours.Count)
+				return false;
+
+			var lowerNeighbours = constraints.Where(x => x.X == variable && x.Comparator == CompareEnum.Smaller).Select(x => x.Y).ToList();
+			lowerNeighbours.AddRange(constraints.Where(x => x.Y == variable && x.Comparator == CompareEnum.Greater).Select(x => x.X));
+			lowerNeighbours = lowerNeighbours.Where(x => constrainingValues.Keys.Contains(x)).Distinct().ToList();
+
+			allLeftDomains = new List<Domain>();
+			foreach (var neighbour in lowerNeighbours)
+			{
+				allLeftDomains.AddRange(constrainingValues[neighbour]);
+			}
+			allLeftDomains = allLeftDomains.Distinct().ToList();
+			if (allLeftDomains.Count < lowerNeighbours.Count)
+				return false;
+			return true;
+		}
+
+		private static bool IsBetter(Dictionary<Variable, List<Domain>> cnt, Dictionary<Variable, List<Domain>> constrainingValues)
+		{
+			var tmp = cnt.Values.Select(x => x.Count).ToList();
 			tmp.Sort();
-			var tmp2 = new List<int>(constrainingValues.Values);
+			var tmp2 = constrainingValues.Values.Select(x => x.Count).ToList();
 			tmp2.Sort();
 			for (var i = 0; i < tmp.Count; i++)
 			{
@@ -303,12 +338,12 @@ namespace CSP.Calculation
 			return false;
 		}
 
-		private static Dictionary<Variable, int> CountConstrainingValues(Dictionary<Variable, List<Domain>> neighbours, List<Constraint> constraints)
+		private static Dictionary<Variable, List<Domain>> CountConstrainingValues(Dictionary<Variable, List<Domain>> neighbours, List<Constraint> constraints)
 		{
-			var cnt = new Dictionary<Variable, int>();
+			var cnt = new Dictionary<Variable, List<Domain>>();
 			foreach (var neighbour in neighbours.Keys)
 			{
-				cnt.Add(neighbour, GetLegalValues(neighbour, neighbours[neighbour], constraints).Count);
+				cnt.Add(neighbour, GetLegalValues(neighbour, neighbours[neighbour], constraints));
 			}
 
 			return cnt;
