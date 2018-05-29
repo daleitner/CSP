@@ -17,13 +17,17 @@ namespace CSP.Calculation
 				constraints.Remove(constraint);
 			}
 
+			var nodes = constraints.Select(x => x.X).ToList();
+			nodes.AddRange(constraints.Select(x => x.Y));
+			nodes = nodes.Distinct().ToList();
+			nodes = SortNodesByConstraints(nodes, constraints);
 			int level = 2;
 			worker.ReportProgress(0);
 			do
 			{
 				level++;
-				var circles = ConstraintManager.GetCircles(constraints, level);
-				worker.ReportProgress(level*100/constraints.Count);
+				var circles = ConstraintManager.GetCircles(nodes, constraints, level);
+				worker.ReportProgress(level*100/nodes.Count);
 				var toRemoveConstraints = new List<Constraint>();
 				foreach (var circle in circles)
 				{
@@ -35,7 +39,7 @@ namespace CSP.Calculation
 				}
 
 				notMatched.AddRange(toRemoveConstraints.Distinct());
-			} while (level <= constraints.Count);
+			} while (level <= nodes.Count);
 
 			worker.ReportProgress(0);
 			var str = "";
@@ -75,6 +79,29 @@ namespace CSP.Calculation
 			}
 
 			return new CSPContainer {Assignments = variables, NotMatchedConstraints = notMatched};
+		}
+
+		private static List<Variable> SortNodesByConstraints(List<Variable> nodes, List<Constraint> constraints)
+		{
+			var result = new List<Variable>();
+			var tmp = new List<Variable>(nodes);
+			while (tmp.Any())
+			{
+				var max = 0;
+				Variable maxNode = null;
+				foreach (var variable in tmp)
+				{
+					var cnt = constraints.Count(x => x.X == variable || x.Y == variable);
+					if (cnt > max)
+					{
+						max = cnt;
+						maxNode = variable;
+					}
+				}
+				result.Add(maxNode);
+				tmp.Remove(maxNode);
+			}
+			return result;
 		}
 
 		private static void SetVariablesWithNoConstraints(List<Variable> variables, List<Domain> domains, List<Constraint> constraints, bool isPairwiseDisjunct, BackgroundWorker worker)

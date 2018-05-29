@@ -153,12 +153,9 @@ namespace CSP.Calculation
 			return constraint.Comparator != currentConstraint.Comparator;
 		}
 
-		public static List<List<Constraint>> GetCircles(List<Constraint> constraints, int maxLevel)
+		public static List<List<Constraint>> GetCircles(List<Variable> nodes, List<Constraint> constraints, int maxLevel)
 		{
 			var circles = new List<List<Constraint>>();
-			var nodes = constraints.Select(x => x.X).ToList();
-			nodes.AddRange(constraints.Select(x => x.Y));
-			nodes = nodes.Distinct().ToList();
 			var compareConstraints = constraints
 				.Where(x => x.Comparator == CompareEnum.Greater || x.Comparator == CompareEnum.Smaller).ToList();
 			var inspectedNodes = new List<Variable>();
