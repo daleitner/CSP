@@ -159,14 +159,16 @@ namespace CSP.Calculation
 			var nodes = constraints.Select(x => x.X).ToList();
 			nodes.AddRange(constraints.Select(x => x.Y));
 			nodes = nodes.Distinct().ToList();
-
+			var compareConstraints = constraints
+				.Where(x => x.Comparator == CompareEnum.Greater || x.Comparator == CompareEnum.Smaller).ToList();
+			var inspectedNodes = new List<Variable>();
 			for (var index = 0; index < nodes.Count; index++)
 			{
 				var variable = nodes[index];
-				var nodeCircles = GetCompareCirclesRecursive(variable,
-					constraints.Where(x => x.Comparator == CompareEnum.Greater || x.Comparator == CompareEnum.Smaller).ToList(),
+				var nodeCircles = GetCompareCirclesRecursive(variable, compareConstraints.Where(x => !inspectedNodes.Contains(x.X) && !inspectedNodes.Contains(x.Y)).ToList(), 
 					new List<Constraint>(), new List<Variable> {variable}, nodes.GetRange(0, index), maxLevel, 1);
 				circles.AddRange(nodeCircles);
+				inspectedNodes.Add(variable);
 			}
 
 			for (var i = 0; i < circles.Count; i++)
