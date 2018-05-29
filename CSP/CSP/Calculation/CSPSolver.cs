@@ -27,7 +27,6 @@ namespace CSP.Calculation
 			{
 				level++;
 				var circles = ConstraintManager.GetCircles(nodes, constraints, level);
-				worker.ReportProgress(level*100/nodes.Count);
 				var toRemoveConstraints = new List<Constraint>();
 				foreach (var circle in circles)
 				{
@@ -39,6 +38,7 @@ namespace CSP.Calculation
 				}
 
 				notMatched.AddRange(toRemoveConstraints.Distinct());
+				worker.ReportProgress(level * 100 / nodes.Count);
 			} while (level <= nodes.Count);
 
 			worker.ReportProgress(0);

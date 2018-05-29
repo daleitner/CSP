@@ -267,9 +267,11 @@ namespace CSP.Calculation
 			foreach (var edge in circle)
 			{
 				var contradictions = CountContradictions(edge, constraints);
-				if (contradictions >= maxContradictions)
+				var confirmations = CountConfirmations(edge, constraints);
+				var contradictionRatio = (contradictions + confirmations) > 0 ? contradictions * 100 / (contradictions + confirmations) : 0;
+				if (contradictionRatio >= maxContradictions)
 				{
-					maxContradictions = contradictions;
+					maxContradictions = contradictionRatio;
 					constraintWithMaxContradictions = edge;
 				}
 			}
@@ -284,8 +286,19 @@ namespace CSP.Calculation
 			{
 				if (FoundContradiction(node, edge, constraints))
 					counter++;
+			}
+
+			return counter;
+		}
+
+		private static int CountConfirmations(Constraint edge, List<Constraint> constraints)
+		{
+			var counter = 0;
+			var nodes = GetRemainingNodes(edge, constraints);
+			foreach (var node in nodes)
+			{
 				if (FoundConfirmation(node, edge, constraints))
-					counter--;
+					counter++;
 			}
 
 			return counter;
